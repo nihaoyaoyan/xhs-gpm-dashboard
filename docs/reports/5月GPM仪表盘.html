@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5月小红书GPM分析仪表盘</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#0e1117;color:#e5e7eb;padding:20px;min-height:100vh}
+.dashboard{max-width:1440px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:center;padding:16px 0 24px;border-bottom:1px solid #1f2937;margin-bottom:24px}
+.header h1{font-size:24px;font-weight:700;color:#fff}
+.header h1 span{background:#ff2442;color:#fff;font-size:12px;padding:2px 8px;border-radius:4px;margin-left:10px;vertical-align:middle}
+.header .date{color:#9ca3af;font-size:14px}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
+.kpi-card{background:#1a1d27;border-radius:12px;padding:20px;border:1px solid #262a36;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:12px 0 0 12px}
+.kpi-card:nth-child(1)::before{background:#5B8FF9}
+.kpi-card:nth-child(2)::before{background:#ff2442}
+.kpi-card:nth-child(3)::before{background:#F6BD16}
+.kpi-card:nth-child(4)::before{background:#5AD8A6}
+.kpi-card:nth-child(5)::before{background:#945FB9}
+.kpi-label{font-size:13px;color:#9ca3af;margin-bottom:8px}
+.kpi-value{font-size:28px;font-weight:700;color:#fff;margin-bottom:4px}
+.kpi-value .unit{font-size:14px;font-weight:400;color:#9ca3af;margin-left:4px}
+.kpi-sub{font-size:12px;color:#6b7280}
+.kpi-sub .highlight{color:#ff2442;font-weight:600}
+.kpi-sub .green{color:#5AD8A6;font-weight:600}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-grid .full{grid-column:1/-1}
+.chart-box{background:#1a1d27;border-radius:12px;padding:16px;border:1px solid #262a36}
+.chart-title{font-size:15px;font-weight:600;color:#e5e7eb;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.chart-title .tag{font-size:11px;background:#ff2442;color:#fff;padding:1px 6px;border-radius:3px;font-weight:500}
+.chart-container{width:100%;height:360px}
+.chart-container.tall{height:420px}
+.table-wrap{overflow-x:auto;margin-top:4px}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table thead th{background:#222635;color:#9ca3af;padding:10px 12px;text-align:left;font-weight:500;cursor:pointer;white-space:nowrap;position:sticky;top:0;z-index:2;user-select:none}
+.data-table thead th:hover{color:#ff2442}
+.data-table thead th .sort-icon{display:inline-block;margin-left:4px;opacity:0.4}
+.data-table thead th.sorted .sort-icon{opacity:1;color:#ff2442}
+.data-table tbody tr{border-bottom:1px solid #1f2937;transition:background 0.15s}
+.data-table tbody tr:hover{background:#222635}
+.data-table tbody td{padding:8px 12px;white-space:nowrap}
+.data-table .rank{color:#6b7280;width:30px;text-align:center}
+.data-table .rank.top1{color:#F6BD16;font-weight:700}
+.data-table .rank.top2{color:#9ca3af;font-weight:600}
+.data-table .rank.top3{color:#d97706;font-weight:600}
+.data-table .title-cell{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e5e7eb}
+.data-table .creator-tag{background:#262a36;color:#5B8FF9;padding:2px 8px;border-radius:10px;font-size:12px}
+.data-table .type-tag{padding:2px 7px;border-radius:4px;font-size:11px}
+.data-table .type-tag.img{background:rgba(91,143,249,0.15);color:#5B8FF9}
+.data-table .type-tag.video{background:rgba(90,216,166,0.15);color:#5AD8A6}
+.data-table .gpm-high{color:#ff2442;font-weight:600}
+.data-table .gpm-mid{color:#F6BD16;font-weight:600}
+.data-table .gpm-low{color:#5AD8A6}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#1a1d27}
+::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#4b5563}
+@media(max-width:900px){
+  .kpi-row{grid-template-columns:repeat(3,1fr)}
+  .chart-grid{grid-template-columns:1fr}
+  .header{flex-direction:column;align-items:flex-start;gap:8px}
+}
+@media(max-width:600px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .kpi-value{font-size:22px}
+  body{padding:12px}
+}
+.table-controls{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.table-controls select,.table-controls input{background:#222635;border:1px solid #374151;color:#e5e7eb;padding:6px 12px;border-radius:6px;font-size:13px;outline:none}
+.table-controls select:focus,.table-controls input:focus{border-color:#ff2442}
+.table-controls label{color:#9ca3af;font-size:13px}
+.table-info{color:#6b7280;font-size:13px;margin-top:6px;text-align:right}
+</style>
+</head>
+<body>
+<div class="dashboard">
+  <div class="header">
+    <h1>小红书 GPM 分析仪表盘 <span>5月</span></h1>
+    <div class="date">数据周期：2026年5月 | 对比：6月 & 本周(6.23-7.3)</div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">📊 5月整体GPM</div>
+      <div class="kpi-value">38.85</div>
+      <div class="kpi-sub">每千次曝光带来 <span class="highlight">¥38.85</span> GMV</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">💰 总GMV</div>
+      <div class="kpi-value">¥79,650</div>
+      <div class="kpi-sub">5月商品交易总额</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">📝 有GMV笔记</div>
+      <div class="kpi-value">239<span class="unit">/ 1,477</span></div>
+      <div class="kpi-sub">GMV转化率 <span class="highlight">16.2%</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">🎬 视频笔记GPM</div>
+      <div class="kpi-value">77.55</div>
+      <div class="kpi-sub">视频整体GPM，<span class="green">远超图文均值</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">🚀 潜力爆款笔记</div>
+      <div class="kpi-value">80<span class="unit">篇</span></div>
+      <div class="kpi-sub">低曝光高GPM，可加大投放</div>
+    </div>
+  </div>
+
+  <!-- Row 1: 3-Period Trend -->
+  <div class="chart-grid">
+    <div class="chart-box full">
+      <div class="chart-title"><span class="tag">⭐ 核心</span> 5月 → 6月 → 本周 GPM / GMV / 曝光量 三期趋势</div>
+      <div class="chart-container" id="trendChart"></div>
+    </div>
+  </div>
+
+  <!-- Row 2: Creator Comparison + GPM Distribution -->
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-title">📊 各创作者三期GPM对比</div>
+      <div class="chart-container" id="creatorGpmChart"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">🥧 5月GPM分布</div>
+      <div class="chart-container" id="gpmDistChart"></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Creator Contribution + Image vs Video -->
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-title">📈 创作者贡献排行（GMV + GPM双轴）</div>
+      <div class="chart-container" id="creatorContribChart"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">📐 图文 vs 视频 对比分析</div>
+      <div class="chart-container" id="imgVsVideoChart"></div>
+    </div>
+  </div>
+
+  <!-- Row 4: Scatter Plot -->
+  <div class="chart-grid">
+    <div class="chart-box full">
+      <div class="chart-title">🔬 曝光量 vs GPM 散点图 <span class="tag">239条有GMV笔记</span></div>
+      <div class="chart-container tall" id="scatterChart"></div>
+    </div>
+  </div>
+
+  <!-- Row 5: Data Table -->
+  <div class="chart-box" style="margin-top:16px">
+    <div class="chart-title">🏆 Top 50 高GPM笔记排行榜 <span class="tag">可排序</span></div>
+    <div class="table-controls">
+      <label>筛选创作者：</label>
+      <select id="creatorFilter" onchange="applyFilters()">
+        <option value="all">全部</option>
+        <option value="鲜水湾">鲜水湾</option>
+        <option value="菲菲上班吃什么">菲菲上班吃什么</option>
+        <option value="婉婉上班吃什么">婉婉上班吃什么</option>
+        <option value="小柚练后吃什么">小柚练后吃什么</option>
+      </select>
+      <label>最小GPM：</label>
+      <input type="number" id="minGpm" value="0" min="0" onchange="applyFilters()" style="width:80px">
+      <span style="color:#6b7280;font-size:13px">点击表头可排序</span>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="topTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)" style="width:36px"># <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(1)">笔记标题 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(2)">创作者 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(3)">类型 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(4)">GMV <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(5)">曝光量 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(6)" class="sorted">GPM <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(7)">互动率 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(8)">客单价 <span class="sort-icon">⇅</span></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="table-info" id="tableInfo">加载中...</div>
+  </div>
+</div>
+
+<script>
+// ======================== EMBEDDED DATA ========================
+var EMBEDDED_SCATTER = [{"x": 874867.0, "y": 31.53507904630075, "gmv": 27589.0, "title": "以为 69 没多少，结果解决了我一周上班带饭", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 53314.0, "y": 46.61064635930525, "gmv": 2485.0, "title": "和老爸商量了推出减脂三文鱼小包装", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 45211.0, "y": 40.12297892105903, "gmv": 1814.0, "title": "其实，300块能吃一个月的三文鱼😎", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 17849.0, "y": 30.92610230265001, "gmv": 552.0, "title": "在某马买了3次虾仁，最后一次我决定换一家", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 3317.0, "y": 100.994874886946, "gmv": 335.0, "title": "上班带饭真的很省钱……", "creator": "菲菲上班吃什么", "type": "视频笔记"}, {"x": 25843.0, "y": 30.51890260418681, "gmv": 788.6999999999998, "title": "和老爸商量后，推出专为独居姐妹做的小包装", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 13251.0, "y": 47.83789902648856, "gmv": 633.9, "title": "五一前后，给青岛老丈人送条鲅鱼吧！", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 14670.0, "y": 76.89161554192229, "gmv": 1128.0, "title": "和老爸商量了，推出一人食小包装三文鱼", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 21533.0, "y": 47.64779640551711, "gmv": 1026.0, "title": "身材管理期吃它！我两周掉了6斤！", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 13606.0, "y": 50.71292077024842, "gmv": 690.0, "title": "和老爸商量后，推出专为独居姐妹做的小包装", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 9045.0, "y": 42.45439469320066, "gmv": 384.0, "title": "100多直接囤够了我一周的管理餐", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 16665.0, "y": 134.8334833483348, "gmv": 2247.0, "title": "区区69💰居然够我自律期吃一周了！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 12352.0, "y": 86.94948186528498, "gmv": 1074.0, "title": "太喜欢这个整条三文鱼了，比Sam实惠多了", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 5759.0, "y": 23.96249348845286, "gmv": 138.0, "title": "某姆的虾仁我吃了三年，直到换了它", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 8572.0, "y": 266.6822211852543, "gmv": 2286.0, "title": "感谢315，让我家无添加虾仁又爆单了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 8842.0, "y": 89.75344944582673, "gmv": 793.6, "title": "马上五一了！又到了给老丈人送鲅鱼的时候了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 17738.0, "y": 27.9625662419664, "gmv": 496.0, "title": "以为 300 没多少，结果冰箱里全是三文鱼", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 5552.0, "y": 89.33717579250721, "gmv": 496.0, "title": "其实300来块够吃一个月抗炎饮食了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 11775.0, "y": 59.10828025477706, "gmv": 696.0, "title": "年轻人已经对100块钱的购买力没概念了...", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 6684.0, "y": 17.65409934171155, "gmv": 118.0, "title": "带饭三个月，存了一万二", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 5944.0, "y": 34.82503364737551, "gmv": 207.0, "title": "短短一周逼自己So了好多", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 8105.0, "y": 99.69154842689699, "gmv": 808.0, "title": "真别低估了100来块的购买力，够吃半个月了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 6612.0, "y": 49.15305505142166, "gmv": 325.0, "title": "第一次对爬坡后吃快碳起了敬意……", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 8569.0, "y": 24.15684443925779, "gmv": 207.0, "title": "某姆很好，但没有小包装真的劝退", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 4284.0, "y": 29.87861811391223, "gmv": 128.0, "title": "第一次对爬坡后吃快碳起了敬意…", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 12298.0, "y": 11.22133680273215, "gmv": 138.0, "title": "和老爸商量了，专为早八人推出的减脂小包装", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 8632.0, "y": 15.9870250231696, "gmv": 138.0, "title": "老天奶...一周9斤啊", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 4998.0, "y": 39.41576630652261, "gmv": 197.0, "title": "不是？昨天吃虾仁今天直接掉了快两斤！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 7063.0, "y": 45.58969276511397, "gmv": 322.0, "title": "100多直接囤够了我一周的减脂餐", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 3921.0, "y": 17.59755164498852, "gmv": 69.0, "title": "控体期发现一个比液断还牛的方法", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 4183.0, "y": 47.09538608654076, "gmv": 197.0, "title": "轻断食 真的会So！！！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 5377.0, "y": 81.83001673795796, "gmv": 440.0, "title": "给孩子补充营养首选，三文鱼是唯一真神", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 4256.0, "y": 111.1372180451128, "gmv": 473.0, "title": "和老爹商量后，推出一人食小包装", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 4252.0, "y": 32.45531514581374, "gmv": 138.0, "title": "69元5袋虾仁，一袋一顿真的很适合减脂期", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 3932.0, "y": 52.64496439471007, "gmv": 207.0, "title": "以为100块没多少，结果够我吃半个月了", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 3345.0, "y": 61.88340807174888, "gmv": 207.0, "title": "同事问我：你天天带虾仁，月薪多少啊", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 5808.0, "y": 168.732782369146, "gmv": 980.0, "title": "300 来块的购买力，一整条够吃一个月了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 4924.0, "y": 84.84971567831032, "gmv": 417.8, "title": "怎么没人和我说呀！五一要送大鲅鱼", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2906.0, "y": 23.74397797660014, "gmv": 69.0, "title": "平台期卡了半个月全靠虾仁破局", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 6203.0, "y": 141.8668386264711, "gmv": 880.0, "title": "三文鱼扒1000g 限时折扣，快冲吧", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2716.0, "y": 47.1281296023564, "gmv": 128.0, "title": "公司微波炉坏了第三天，我反而吃得更健康了", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 2533.0, "y": 27.24042637189104, "gmv": 69.0, "title": "虾仁别直接下锅煮，难怪你做出来又柴又腥", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 3610.0, "y": 19.11357340720221, "gmv": 69.0, "title": "我妈：终于不天天吃外卖了😂", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 3656.0, "y": 56.61925601750547, "gmv": 207.0, "title": "69块承包一周减脂餐，真真真香⚠️", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 3052.0, "y": 148.4272608125819, "gmv": 453.0, "title": "同事总说我天天吃虾仁也太奢侈了……", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1914.0, "y": 66.87565308254965, "gmv": 128.0, "title": "教大家一个订婚前15天瘦骨感巨屌的tips", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 3424.0, "y": 40.30373831775701, "gmv": 138.0, "title": "一天一袋，才一杯奶茶钱！😂", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 3859.0, "y": 35.76055973050013, "gmv": 138.0, "title": "以为 69 没多少，结果够我吃一周减脂餐了", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 3786.0, "y": 89.27628103539357, "gmv": 338.0, "title": "三文鱼真的太适合管理期吃啦", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 3000.0, "y": 23.0, "gmv": 69.0, "title": "听劝…给孩子吃就买这种配料表干净的虾仁", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 4409.0, "y": 98.8886368791109, "gmv": 436.0, "title": "三文鱼排1000g限时直降", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1832.0, "y": 37.66375545851528, "gmv": 69.0, "title": "听劝！不吃晚饭真的会稳稳反弹", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1917.0, "y": 71.98748043818466, "gmv": 138.0, "title": "凭一己之力带动整个办公室自制减脂餐", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1664.0, "y": 82.9326923076923, "gmv": 138.0, "title": "我发现能控制住血糖的人都有一个饮食特点", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 2991.0, "y": 23.06920762286861, "gmv": 69.0, "title": "早八人5分钟便当，同事以为我点外卖😎", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 3506.0, "y": 19.68054763262978, "gmv": 69.0, "title": "比轻食外卖划算太多了🥹", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 2401.0, "y": 57.47605164514786, "gmv": 138.0, "title": "你说 69💰5 袋我微微心动，顺丰包邮我直接冲", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2156.0, "y": 141.0018552875696, "gmv": 304.0, "title": "奉劝大家别低估100块，真的够吃大半月", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 3505.0, "y": 75.89158345221112, "gmv": 266.0, "title": "现在年轻人，严重低估了69的购买力！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 3734.0, "y": 73.91537225495446, "gmv": 276.0, "title": "69囤的虾仁，居然让我开始做饭了😂", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 2946.0, "y": 46.84317718940937, "gmv": 138.0, "title": "海边朋友教我这样买虾仁😭", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 2333.0, "y": 38.5340762966138, "gmv": 89.9, "title": "报告！这个三文鱼墩墩太适合一人食了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2676.0, "y": 25.41106128550075, "gmv": 68.0, "title": "谁说 300 块不经花❓够我吃一个月三文鱼了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 3528.0, "y": 39.1156462585034, "gmv": 138.0, "title": "我也不想吃啊，可它69够我吃一周了😂", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 3529.0, "y": 19.5522810994616, "gmv": 69.0, "title": "减脂人冰箱里一定要有虾仁😭", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 2812.0, "y": 20.62588904694168, "gmv": 58.0, "title": "300来块解决我半个月的健康晚餐", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2765.0, "y": 49.90958408679928, "gmv": 138.0, "title": "我也不想买啊😭但69够我吃一周虾仁了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 2154.0, "y": 150.8820798514392, "gmv": 325.0, "title": "一个人住后疯狂囤虾仁😭", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 4077.0, "y": 50.77262693156733, "gmv": 207.0, "title": "感觉掉秤最明显的还是吃大虾😭", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1820.0, "y": 37.91208791208791, "gmv": 69.0, "title": "下班回家太累了，5分钟搞定的晚餐", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 3055.0, "y": 45.17184942716858, "gmv": 138.0, "title": "心甘情愿让我囤！！！真的会⬇️⬇️！！！！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1801.0, "y": 71.07162687395892, "gmv": 128.0, "title": "带饭被同事围观：你也吃太好了吧🍤", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 2621.0, "y": 140.4044257916825, "gmv": 368.0, "title": "区区300块承包了我半个多月的减脂餐", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 2894.0, "y": 23.84243261921216, "gmv": 69.0, "title": "奉劝大家不要低估69块的购买力！ ！！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 630.0, "y": 250.7936507936508, "gmv": 158.0, "title": "头籽北极甜虾你真的会吃吗？", "creator": "小柚练后吃什么", "type": "视频笔记"}, {"x": 2072.0, "y": 177.6061776061776, "gmv": 368.0, "title": "谁还去日料店啊，一整条才 300 来块", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2474.0, "y": 27.89005658852061, "gmv": 69.0, "title": "减脂人冰箱里一定要有虾仁😭", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 2588.0, "y": 338.4853168469861, "gmv": 876.0, "title": "超市三文鱼看着精致，但整条分装真的更划算", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2418.0, "y": 134.4086021505376, "gmv": 325.0, "title": "感谢赵露s…虾仁真的太顶了😭", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 554.0, "y": 249.0974729241877, "gmv": 138.0, "title": "69块钱虾仁，吃了一周！😭你还说我奢侈…", "creator": "小柚练后吃什么", "type": "视频笔记"}, {"x": 3144.0, "y": 21.94656488549618, "gmv": 69.0, "title": "海边朋友教我这样买虾仁😭", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 2848.0, "y": 48.45505617977528, "gmv": 138.0, "title": "按照客户要求，推出不到100卡减脂小包装", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2287.0, "y": 160.9094884127678, "gmv": 368.0, "title": "某姆的品质pxx的价格！", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1962.0, "y": 65.2395514780836, "gmv": 128.0, "title": "我将放弃牛排转入三文鱼大家族", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2388.0, "y": 158.2914572864321, "gmv": 378.0, "title": "跟爸妈商量好，推出整条三文鱼了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2394.0, "y": 28.82205513784461, "gmv": 69.0, "title": "和老爸商量了，推出打工人带饭小包装虾仁", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1383.0, "y": 49.89154013015185, "gmv": 69.0, "title": "今天上班午饭又是虾仁炒蛋，比外卖低太多", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1657.0, "y": 41.64152082076041, "gmv": 69.0, "title": "帮爸妈卖虾后发现，69块5袋真的够吃一周", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2493.0, "y": 250.3008423586041, "gmv": 624.0, "title": "300多整条三文鱼，装了我整个冰箱", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1259.0, "y": 93.7251787132645, "gmv": 118.0, "title": "太适合一人食了，快去拍这个小包装三文鱼", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2411.0, "y": 28.61883036084612, "gmv": 69.0, "title": "某姆很好！但是某姆没有小包装", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1680.0, "y": 41.07142857142857, "gmv": 69.0, "title": "区区69块承包一周减脂餐", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1460.0, "y": 252.054794520548, "gmv": 368.0, "title": "对不起了 sam ！还是这种整条的更有性价比", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 2566.0, "y": 26.89010132501949, "gmv": 69.0, "title": "爸妈对于我每天吃虾仁表示很奢侈😭…", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1396.0, "y": 49.4269340974212, "gmv": 69.0, "title": "奉劝在健身房爬坡没瘦的姐妹！！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 2087.0, "y": 32.58265452803067, "gmv": 68.0, "title": "区区300块够吃半个月三文鱼了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 2585.0, "y": 53.38491295938105, "gmv": 138.0, "title": "握草，才69，够我一周上班带饭了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1257.0, "y": 54.89260143198091, "gmv": 69.0, "title": "减脂期发现了一个低卡但巨顶饱的东西", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 3300.0, "y": 41.81818181818182, "gmv": 138.0, "title": "315之后才发现，大家真的懂选虾仁了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1537.0, "y": 44.89264801561484, "gmv": 69.0, "title": "感觉现在的打工人都低估了69r的购买力！", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 921.0, "y": 74.9185667752443, "gmv": 69.0, "title": "迄今为止 我减肥速度最快的一次", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1272.0, "y": 92.76729559748426, "gmv": 118.0, "title": "100元的购买力，真的让我目瞪口呆", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1386.0, "y": 92.35209235209236, "gmv": 128.0, "title": "某马对不起，还是无保水虾仁更适合我", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1564.0, "y": 232.0971867007673, "gmv": 363.0, "title": "整条三文鱼8斤限时折扣！快冲吧", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1697.0, "y": 116.0872127283441, "gmv": 197.0, "title": "减脂人的虾仁都是哪里买的啊😭", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1198.0, "y": 106.8447412353923, "gmv": 128.0, "title": "同事以为我每天吃轻食店，其实一周才花69……", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 2577.0, "y": 26.77532013969732, "gmv": 69.0, "title": "带饭一个月，居然省了这么多😭", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1623.0, "y": 226.7406038200862, "gmv": 368.0, "title": "300 多就能搞定 1 个多月的减脂餐，超划算", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 2020.0, "y": 182.1782178217822, "gmv": 368.0, "title": "区区 300 来块够我吃一个月减脂餐了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1482.0, "y": 179.4871794871795, "gmv": 266.0, "title": "谁说一个人做饭麻烦？5分钟搞定👩‍🍳", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1785.0, "y": 66.10644257703082, "gmv": 118.0, "title": "跟爸妈商量后，推出一个月的量减脂餐", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1137.0, "y": 60.68601583113457, "gmv": 69.0, "title": "天天带虾仁，同事问我月薪多少啊", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 942.0, "y": 146.4968152866242, "gmv": 138.0, "title": "由于我不停的吃！！ 不停的吃！！！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1839.0, "y": 37.52039151712887, "gmv": 69.0, "title": "‼️长期吃虾的代价就是⚡️⚡️⚡️", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1886.0, "y": 73.17073170731707, "gmv": 138.0, "title": "315过后，每天300斤虾仁不够卖的…", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1279.0, "y": 53.94839718530102, "gmv": 69.0, "title": "早八减脂人，5分钟搞定👩‍🍳快手早餐！！！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1557.0, "y": 88.63198458574182, "gmv": 138.0, "title": "迄今为止⬇️最快的一次！！！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1854.0, "y": 37.2168284789644, "gmv": 69.0, "title": "减脂期的快乐！是69r吃一周的虾仁给的🍤", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 951.0, "y": 72.55520504731862, "gmv": 69.0, "title": "比轻食外卖划算太多了🥹", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1340.0, "y": 102.9850746268657, "gmv": 138.0, "title": "某马虾仁很好，但网购小包装更适合一人食", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1318.0, "y": 104.7040971168437, "gmv": 138.0, "title": "原来减脂餐也能吃这么爽😭 比外卖好吃！！！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1576.0, "y": 43.78172588832487, "gmv": 69.0, "title": "不夸张 这虾仁我已经回购七八次了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1426.0, "y": 48.38709677419354, "gmv": 69.0, "title": "以为69没多少，结果够我一周上班带饭了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 947.0, "y": 72.86166842661035, "gmv": 69.0, "title": "69直接囤了我一周的减脂餐…", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1531.0, "y": 90.13716525146963, "gmv": 138.0, "title": "天天带虾仁，同事问我月薪多少啊", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1227.0, "y": 160.5541972290139, "gmv": 197.0, "title": "减脂期囤它，我外卖都戒了😭", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1736.0, "y": 39.74654377880184, "gmv": 69.0, "title": "区区69承包了我一周的减脂餐", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1190.0, "y": 275.6302521008404, "gmv": 328.0, "title": "山东地区女婿们又到送鲅鱼给老丈人的时候了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1453.0, "y": 47.48795595320028, "gmv": 69.0, "title": "听劝，咱家虾仁收到就白水煮！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1741.0, "y": 73.52096496266513, "gmv": 128.0, "title": "100来块囤了半个月减脂餐！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1055.0, "y": 130.8056872037915, "gmv": 138.0, "title": "同事以为我天天点轻食🥹", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1099.0, "y": 62.78434940855323, "gmv": 69.0, "title": "🥹打工人一吃一个不吱声！！！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1788.0, "y": 38.59060402684564, "gmv": 69.0, "title": "这虾仁独立小包装，懒人看了都心动🤣", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1367.0, "y": 93.6356986100951, "gmv": 128.0, "title": "谁说打工人带饭麻烦？5分钟搞定👩‍🍳", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1383.0, "y": 49.89154013015185, "gmv": 69.0, "title": "吃不够！！！减肥！！！根本吃不够！！！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1583.0, "y": 43.58812381554011, "gmv": 69.0, "title": "我妈说我疯了…一次囤了7天的量", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1375.0, "y": 100.3636363636364, "gmv": 138.0, "title": "69元的购买力，解决一周工作餐", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 952.0, "y": 72.47899159663866, "gmv": 69.0, "title": "我妈：终于不天天吃外卖了🤣", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 698.0, "y": 183.3810888252149, "gmv": 128.0, "title": "3斤虾才能剥1斤虾仁，真别算不过账！", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1239.0, "y": 55.69007263922518, "gmv": 69.0, "title": "69块承包一周减脂餐，真真真香⚠️", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1441.0, "y": 47.88341429562804, "gmv": 69.0, "title": "每天带饭最怕别人问： “你怎么天天吃这么好", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 957.0, "y": 72.10031347962382, "gmv": 69.0, "title": "老板都说“奢侈”其实真不贵！！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 987.0, "y": 69.90881458966565, "gmv": 69.0, "title": "开心到起飞，天天都有掉！！！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1148.0, "y": 120.2090592334495, "gmv": 138.0, "title": "已瘦5斤🥹吃减肥餐真的很快乐…", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1264.0, "y": 54.58860759493671, "gmv": 69.0, "title": "69块5袋虾仁，够我吃一周减脂餐", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1091.0, "y": 63.24472960586618, "gmv": 69.0, "title": "‼️生活化减脂！！？吃的干净真的会瘦！！！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1113.0, "y": 115.0044923629829, "gmv": 128.0, "title": "100多直接囤够了我一周的减脂餐", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1009.0, "y": 126.8582755203171, "gmv": 128.0, "title": "敞开吃吧！减脂期吃虾仁真的夯爆了🤣", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1063.0, "y": 64.91063029162747, "gmv": 69.0, "title": "冰箱有它，懒人一周带饭不重样🍱", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1293.0, "y": 53.36426914153132, "gmv": 69.0, "title": "减脂期嘴馋？这一锅吃到撑也不怕🍲", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 746.0, "y": 171.5817694369973, "gmv": 128.0, "title": "本以为69块没多少，没想到吃了整整一周…", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1320.0, "y": 96.96969696969697, "gmv": 128.0, "title": "听劝，咱家虾仁收到就白水煮！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1138.0, "y": 60.63268892794376, "gmv": 69.0, "title": "315过后，每天300斤虾仁不够卖的", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1191.0, "y": 115.8690176322418, "gmv": 138.0, "title": "真听劝，推出不到100卡一人食小包装", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1543.0, "y": 134.1542449773169, "gmv": 207.0, "title": "69块直接囤了我一周的减脂餐🥹", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1445.0, "y": 136.3321799307959, "gmv": 197.0, "title": "sam对不起，还是小包装更有幸福感✌️", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1543.0, "y": 89.43616331821127, "gmv": 138.0, "title": "吃虾仁！！！我真的是认真的！！！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 859.0, "y": 80.32596041909197, "gmv": 69.0, "title": "懒人做饭第一次这么有成就感！！！！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1094.0, "y": 297.0749542961609, "gmv": 325.0, "title": "减脂期的快乐只花69块就能拥有～", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1559.0, "y": 170.6221937139192, "gmv": 266.0, "title": "夏天能不能穿漂亮裙子，就靠你了！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1145.0, "y": 111.7903930131004, "gmv": 128.0, "title": "69元让我戒掉轻食外卖😭 一餐一包真的顶！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1521.0, "y": 45.36489151873768, "gmv": 69.0, "title": "也没人说69块够我吃一周了😂", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1007.0, "y": 68.52035749751738, "gmv": 69.0, "title": "上班带饭真不贵，69 够我吃一周了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 855.0, "y": 80.70175438596492, "gmv": 69.0, "title": "瘦干螂饮食法真的有点东西 亲测有效的…", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1547.0, "y": 82.74078862314157, "gmv": 128.0, "title": "我也不想买啊，可69r能吃一周减脂餐了！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1319.0, "y": 149.3555724033359, "gmv": 197.0, "title": "今年最成功的消费降级！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1244.0, "y": 55.46623794212218, "gmv": 69.0, "title": "我的食欲稳定三件套：", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1538.0, "y": 89.72691807542263, "gmv": 138.0, "title": "我也不想买啊，可69r能吃一周减脂餐了！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1274.0, "y": 54.16012558869702, "gmv": 69.0, "title": "当代减脂人的冰箱...", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1362.0, "y": 50.66079295154185, "gmv": 69.0, "title": "区区69元，承包了我一星期的减脂餐✅", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1068.0, "y": 119.8501872659176, "gmv": 128.0, "title": "减脂餐终于不是水煮菜了🤣", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 817.0, "y": 168.9106487148103, "gmv": 138.0, "title": "在办公室吃了一天，整个办公室都在跟着回购！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1247.0, "y": 55.33279871692061, "gmv": 69.0, "title": "夏日减脂，区区69块够我吃一周了😂", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1147.0, "y": 60.15693112467306, "gmv": 69.0, "title": "终于理解为什么那么多人囤虾仁了……", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1240.0, "y": 103.2258064516129, "gmv": 128.0, "title": "因为我一个人，带动了全办公室…", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 324.0, "y": 243.8271604938272, "gmv": 79.0, "title": "给害怕处理活虾的人一个买虾思路", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 859.0, "y": 80.32596041909197, "gmv": 69.0, "title": "终于理解为什么那么多人囤虾仁了……", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1297.0, "y": 98.68928296067848, "gmv": 128.0, "title": "同事看我天天吃虾，还以为我伙食多贵", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1374.0, "y": 50.21834061135371, "gmv": 69.0, "title": "‼️69 元的购买力，解决一周工作餐", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1608.0, "y": 42.91044776119403, "gmv": 69.0, "title": "减脂期晚餐不发愁，全靠这袋虾🦐", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1639.0, "y": 42.09884075655888, "gmv": 69.0, "title": "69块钱的虾仁，没想到下班晚餐被它承包了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 324.0, "y": 209.8765432098765, "gmv": 68.0, "title": "给孩子买了一整条三文鱼补营养！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1020.0, "y": 67.6470588235294, "gmv": 69.0, "title": "早八打工人建议：减脂虾仁不要随便买 ！！！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 784.0, "y": 73.9795918367347, "gmv": 58.0, "title": "三文鱼扒 1000g 限时直降！", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 706.0, "y": 181.3031161473088, "gmv": 128.0, "title": "夏日减脂真不多，区区300块够吃一个月了😆", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1292.0, "y": 91.3312693498452, "gmv": 118.0, "title": "坚持吃三文鱼后，才懂它为什么没平替", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1362.0, "y": 50.66079295154185, "gmv": 69.0, "title": "区区69块，承包我一整个星期的饭😂", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1098.0, "y": 89.25318761384335, "gmv": 98.0, "title": "手剥虾仁69管一周？一人食减脂餐", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1189.0, "y": 116.0639192598823, "gmv": 138.0, "title": "这个虾仁夯爆了！区区69块后我吃一周了…", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 687.0, "y": 100.4366812227074, "gmv": 69.0, "title": "我妈对我吃虾仁，表示震惊…", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1199.0, "y": 388.6572143452877, "gmv": 466.0, "title": "区区300多，解决了我一周的减脂餐", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 1575.0, "y": 43.80952380952381, "gmv": 69.0, "title": "69块钱，承包了我5天高蛋白减脂餐", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 603.0, "y": 114.4278606965174, "gmv": 69.0, "title": "感谢老板！一人食独立小包装太方便了😉", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 1142.0, "y": 60.42031523642732, "gmv": 69.0, "title": "第一次对爬坡后虾仁起了敬意……", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 1394.0, "y": 91.82209469153516, "gmv": 128.0, "title": "我也不想吃啊！可它69块够我吃一周", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 769.0, "y": 89.72691807542263, "gmv": 69.0, "title": "我宣布这是我减脂期买过的zui好的虾仁", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 890.0, "y": 143.8202247191011, "gmv": 128.0, "title": "练后补给最严厉的母亲", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 657.0, "y": 194.8249619482496, "gmv": 128.0, "title": "我妈都夸我终于会吃了😂", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1346.0, "y": 51.2630014858841, "gmv": 69.0, "title": "315之后买虾仁，我真的不敢只看个头了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 597.0, "y": 115.5778894472362, "gmv": 69.0, "title": "真的感受到100来块的杀伤力了", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 883.0, "y": 77.01019252548132, "gmv": 68.0, "title": "月薪3500，也能实现三文鱼自由了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 712.0, "y": 276.6853932584269, "gmv": 197.0, "title": "100块吃不了一顿火锅，但承包我一周减脂餐！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 735.0, "y": 93.87755102040816, "gmv": 69.0, "title": "原来69吃一周的低脂餐也能吃这么爽😭", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1092.0, "y": 63.18681318681318, "gmv": 69.0, "title": "破防了！！姐妹们快去试试这个虾仁！！！", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 749.0, "y": 491.3217623497997, "gmv": 368.0, "title": "别不信，300块能买整条三文鱼！", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 981.0, "y": 130.4791029561672, "gmv": 128.0, "title": "天天带虾仁，同事问我月薪多少啊", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 618.0, "y": 546.9255663430421, "gmv": 338.0, "title": "希望整条三文鱼火，但火了又怕断货", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 787.0, "y": 87.67471410419314, "gmv": 69.0, "title": "健身后最方便带得干净健康餐来了😎", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 1000.0, "y": 69.0, "gmv": 69.0, "title": "‼️真听劝，推出不到100卡一人食小包装", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 700.0, "y": 295.7142857142857, "gmv": 207.0, "title": "🥹早八打工人真的挖到宝！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 786.0, "y": 162.8498727735369, "gmv": 128.0, "title": "别低估69块在小红书的购买力…", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 383.0, "y": 180.1566579634465, "gmv": 69.0, "title": "养殖虾和海捕虾，真的不是一种虾", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 568.0, "y": 121.4788732394366, "gmv": 69.0, "title": "管理期必囤！多少个晚上靠它", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 734.0, "y": 94.00544959128065, "gmv": 69.0, "title": "69元直接囤够了我一周的轻食🥗", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 309.0, "y": 1190.938511326861, "gmv": 368.0, "title": "低估了300块的购买力，竟然这么多！", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 379.0, "y": 337.730870712401, "gmv": 128.0, "title": "和爸妈商量后，推出一人食小包装虾仁！", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 392.0, "y": 326.530612244898, "gmv": 128.0, "title": "减脂期冰箱有这几袋虾仁，真的不怕没饭吃", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 426.0, "y": 276.9953051643192, "gmv": 118.0, "title": "区区300多，承包了我一个月的减脂餐", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 814.0, "y": 242.014742014742, "gmv": 197.0, "title": "感谢xhs股东🙏，我家虾仁卖了1000单了", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 510.0, "y": 135.2941176470588, "gmv": 69.0, "title": "减脂餐终于不是水煮菜了🤣", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 367.0, "y": 188.0108991825613, "gmv": 69.0, "title": "这69块一周的减脂餐，吃！", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 502.0, "y": 254.9800796812749, "gmv": 128.0, "title": "⛰️姆对不起！我移情别恋大虾仁了", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 285.0, "y": 242.1052631578947, "gmv": 69.0, "title": "普通人减脂真不贵，69够吃一周了🥹", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 118.0, "y": 1084.745762711864, "gmv": 128.0, "title": "同事以为我天天点轻食🥹", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 160.0, "y": 431.25, "gmv": 69.0, "title": "和爸妈商量后，推出为早八人设计的小包装", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 336.0, "y": 380.9523809523809, "gmv": 128.0, "title": "不夸张，我在xhs买的虾仁从未失手过", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 131.0, "y": 526.7175572519084, "gmv": 69.0, "title": "早八打工人建议：管理期被拿捏…", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 214.0, "y": 322.4299065420561, "gmv": 69.0, "title": "告别⛰️姆大包装！小份虾仁才是独居福音", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 138.0, "y": 927.536231884058, "gmv": 128.0, "title": "和爸妈商量后，专为减脂姐妹推出的小包装🍤", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 131.0, "y": 526.7175572519084, "gmv": 69.0, "title": "不敢相信😱100块承包了我十顿轻食餐", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 58.0, "y": 1189.655172413793, "gmv": 69.0, "title": "夏天快来了，我决定花69吃一周轻食餐🍤", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 79.0, "y": 873.4177215189874, "gmv": 69.0, "title": "普通人减脂省钱分享：100+吃半个月", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 72.0, "y": 1777.777777777778, "gmv": 128.0, "title": "普通人减脂真不贵！69实现一周虾仁自由✨", "creator": "菲菲上班吃什么", "type": "图文笔记"}, {"x": 21.0, "y": 6095.238095238095, "gmv": 128.0, "title": "拒绝外卖！一个人吃不腻的干净饭", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 76.0, "y": 907.8947368421053, "gmv": 69.0, "title": "奉劝大家不要低估 100 块的购买力，够吃一周", "creator": "婉婉上班吃什么", "type": "图文笔记"}, {"x": 130.0, "y": 530.7692307692307, "gmv": 69.0, "title": "终于等到夏天，我要开始猛吃猛控体了", "creator": "小柚练后吃什么", "type": "图文笔记"}, {"x": 77.0, "y": 896.1038961038961, "gmv": 69.0, "title": "同品质虾仁，我们为什么比别家便宜？", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 36.0, "y": 1916.666666666667, "gmv": 69.0, "title": "100块吃不了一顿火锅，但能承包我一周轻食餐", "creator": "鲜水湾", "type": "图文笔记"}, {"x": 14.0, "y": 9142.857142857143, "gmv": 128.0, "title": "减脂期姐妹听我的，都去吃这个！真的超饱腹！", "creator": "婉婉上班吃什么", "type": "图文笔记"}];
+var EMBEDDED_TOP50 = [{"title": "减脂期姐妹听我的，都去吃这个！真的超饱腹！", "creator": "婉婉上班吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 14, "gpm": 9142.857142857143, "engagement": 0.0, "price": 128.0}, {"title": "拒绝外卖！一个人吃不腻的干净饭", "creator": "婉婉上班吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 21, "gpm": 6095.238095238095, "engagement": 0.0, "price": 128.0}, {"title": "100块吃不了一顿火锅，但能承包我一周轻食餐", "creator": "鲜水湾", "type": "图文笔记", "gmv": 69.0, "exposure": 36, "gpm": 1916.666666666667, "engagement": 0.0, "price": 69.0}, {"title": "普通人减脂真不贵！69实现一周虾仁自由✨", "creator": "菲菲上班吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 72, "gpm": 1777.777777777778, "engagement": 0.0, "price": 128.0}, {"title": "低估了300块的购买力，竟然这么多！", "creator": "鲜水湾", "type": "图文笔记", "gmv": 368.0, "exposure": 309, "gpm": 1190.938511326861, "engagement": 0.006472491909385114, "price": 368.0}, {"title": "夏天快来了，我决定花69吃一周轻食餐🍤", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 69.0, "exposure": 58, "gpm": 1189.655172413793, "engagement": 0.0, "price": 69.0}, {"title": "同事以为我天天点轻食🥹", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 118, "gpm": 1084.745762711864, "engagement": 0.0, "price": 128.0}, {"title": "和爸妈商量后，专为减脂姐妹推出的小包装🍤", "creator": "菲菲上班吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 138, "gpm": 927.536231884058, "engagement": 0.0, "price": 128.0}, {"title": "奉劝大家不要低估 100 块的购买力，够吃一周", "creator": "婉婉上班吃什么", "type": "图文笔记", "gmv": 69.0, "exposure": 76, "gpm": 907.8947368421053, "engagement": 0.0, "price": 69.0}, {"title": "同品质虾仁，我们为什么比别家便宜？", "creator": "鲜水湾", "type": "图文笔记", "gmv": 69.0, "exposure": 77, "gpm": 896.1038961038961, "engagement": 0.0, "price": 69.0}, {"title": "普通人减脂省钱分享：100+吃半个月", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 69.0, "exposure": 79, "gpm": 873.4177215189874, "engagement": 0.0, "price": 69.0}, {"title": "希望整条三文鱼火，但火了又怕断货", "creator": "鲜水湾", "type": "图文笔记", "gmv": 338.0, "exposure": 618, "gpm": 546.9255663430421, "engagement": 0.0, "price": 338.0}, {"title": "终于等到夏天，我要开始猛吃猛控体了", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 69.0, "exposure": 130, "gpm": 530.7692307692307, "engagement": 0.0, "price": 69.0}, {"title": "早八打工人建议：管理期被拿捏…", "creator": "菲菲上班吃什么", "type": "图文笔记", "gmv": 69.0, "exposure": 131, "gpm": 526.7175572519084, "engagement": 0.007633587786259542, "price": 69.0}, {"title": "不敢相信😱100块承包了我十顿轻食餐", "creator": "菲菲上班吃什么", "type": "图文笔记", "gmv": 69.0, "exposure": 131, "gpm": 526.7175572519084, "engagement": 0.007633587786259542, "price": 69.0}, {"title": "别不信，300块能买整条三文鱼！", "creator": "鲜水湾", "type": "图文笔记", "gmv": 368.0, "exposure": 749, "gpm": 491.3217623497997, "engagement": 0.001335113484646195, "price": 368.0}, {"title": "和爸妈商量后，推出为早八人设计的小包装", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 69.0, "exposure": 160, "gpm": 431.25, "engagement": 0.0, "price": 69.0}, {"title": "区区300多，解决了我一周的减脂餐", "creator": "鲜水湾", "type": "图文笔记", "gmv": 466.0, "exposure": 1199, "gpm": 388.6572143452877, "engagement": 0.003336113427856547, "price": 233.0}, {"title": "不夸张，我在xhs买的虾仁从未失手过", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 336, "gpm": 380.9523809523809, "engagement": 0.005952380952380952, "price": 128.0}, {"title": "超市三文鱼看着精致，但整条分装真的更划算", "creator": "鲜水湾", "type": "图文笔记", "gmv": 876.0, "exposure": 2588, "gpm": 338.4853168469861, "engagement": 0.001545595054095827, "price": 438.0}, {"title": "和爸妈商量后，推出一人食小包装虾仁！", "creator": "鲜水湾", "type": "图文笔记", "gmv": 128.0, "exposure": 379, "gpm": 337.730870712401, "engagement": 0.0079155672823219, "price": 128.0}, {"title": "减脂期冰箱有这几袋虾仁，真的不怕没饭吃", "creator": "婉婉上班吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 392, "gpm": 326.530612244898, "engagement": 0.01020408163265306, "price": 128.0}, {"title": "告别⛰️姆大包装！小份虾仁才是独居福音", "creator": "菲菲上班吃什么", "type": "图文笔记", "gmv": 69.0, "exposure": 214, "gpm": 322.4299065420561, "engagement": 0.0, "price": 69.0}, {"title": "减脂期的快乐只花69块就能拥有～", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 325.0, "exposure": 1094, "gpm": 297.0749542961609, "engagement": 0.0, "price": 162.5}, {"title": "🥹早八打工人真的挖到宝！", "creator": "菲菲上班吃什么", "type": "图文笔记", "gmv": 207.0, "exposure": 700, "gpm": 295.7142857142857, "engagement": 0.001428571428571429, "price": 69.0}, {"title": "区区300多，承包了我一个月的减脂餐", "creator": "鲜水湾", "type": "图文笔记", "gmv": 118.0, "exposure": 426, "gpm": 276.9953051643192, "engagement": 0.0, "price": 118.0}, {"title": "100块吃不了一顿火锅，但承包我一周减脂餐！", "creator": "菲菲上班吃什么", "type": "图文笔记", "gmv": 197.0, "exposure": 712, "gpm": 276.6853932584269, "engagement": 0.001404494382022472, "price": 98.5}, {"title": "山东地区女婿们又到送鲅鱼给老丈人的时候了", "creator": "鲜水湾", "type": "图文笔记", "gmv": 328.0, "exposure": 1190, "gpm": 275.6302521008404, "engagement": 0.0008403361344537816, "price": 328.0}, {"title": "感谢315，让我家无添加虾仁又爆单了", "creator": "鲜水湾", "type": "图文笔记", "gmv": 2286.0, "exposure": 8572, "gpm": 266.6822211852543, "engagement": 0.001749883341110593, "price": 81.64285714285714}, {"title": "⛰️姆对不起！我移情别恋大虾仁了", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 502, "gpm": 254.9800796812749, "engagement": 0.0, "price": 128.0}, {"title": "对不起了 sam ！还是这种整条的更有性价比", "creator": "婉婉上班吃什么", "type": "图文笔记", "gmv": 368.0, "exposure": 1460, "gpm": 252.054794520548, "engagement": 0.00273972602739726, "price": 368.0}, {"title": "头籽北极甜虾你真的会吃吗？", "creator": "小柚练后吃什么", "type": "视频笔记", "gmv": 158.0, "exposure": 630, "gpm": 250.7936507936508, "engagement": 0.001587301587301587, "price": 158.0}, {"title": "300多整条三文鱼，装了我整个冰箱", "creator": "鲜水湾", "type": "图文笔记", "gmv": 624.0, "exposure": 2493, "gpm": 250.3008423586041, "engagement": 0.005615724027276374, "price": 312.0}, {"title": "69块钱虾仁，吃了一周！😭你还说我奢侈…", "creator": "小柚练后吃什么", "type": "视频笔记", "gmv": 138.0, "exposure": 554, "gpm": 249.0974729241877, "engagement": 0.0, "price": 69.0}, {"title": "给害怕处理活虾的人一个买虾思路", "creator": "鲜水湾", "type": "图文笔记", "gmv": 79.0, "exposure": 324, "gpm": 243.8271604938272, "engagement": 0.0, "price": 79.0}, {"title": "普通人减脂真不贵，69够吃一周了🥹", "creator": "鲜水湾", "type": "图文笔记", "gmv": 69.0, "exposure": 285, "gpm": 242.1052631578947, "engagement": 0.0, "price": 69.0}, {"title": "感谢xhs股东🙏，我家虾仁卖了1000单了", "creator": "鲜水湾", "type": "图文笔记", "gmv": 197.0, "exposure": 814, "gpm": 242.014742014742, "engagement": 0.0, "price": 98.5}, {"title": "整条三文鱼8斤限时折扣！快冲吧", "creator": "鲜水湾", "type": "图文笔记", "gmv": 363.0, "exposure": 1564, "gpm": 232.0971867007673, "engagement": 0.00319693094629156, "price": 363.0}, {"title": "300 多就能搞定 1 个多月的减脂餐，超划算", "creator": "婉婉上班吃什么", "type": "图文笔记", "gmv": 368.0, "exposure": 1623, "gpm": 226.7406038200862, "engagement": 0.004313000616142945, "price": 368.0}, {"title": "给孩子买了一整条三文鱼补营养！", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 68.0, "exposure": 324, "gpm": 209.8765432098765, "engagement": 0.0, "price": 68.0}, {"title": "我妈都夸我终于会吃了😂", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 657, "gpm": 194.8249619482496, "engagement": 0.0, "price": 128.0}, {"title": "这69块一周的减脂餐，吃！", "creator": "菲菲上班吃什么", "type": "图文笔记", "gmv": 69.0, "exposure": 367, "gpm": 188.0108991825613, "engagement": 0.005449591280653951, "price": 69.0}, {"title": "3斤虾才能剥1斤虾仁，真别算不过账！", "creator": "鲜水湾", "type": "图文笔记", "gmv": 128.0, "exposure": 698, "gpm": 183.3810888252149, "engagement": 0.0, "price": 128.0}, {"title": "区区 300 来块够我吃一个月减脂餐了", "creator": "婉婉上班吃什么", "type": "图文笔记", "gmv": 368.0, "exposure": 2020, "gpm": 182.1782178217822, "engagement": 0.00198019801980198, "price": 368.0}, {"title": "夏日减脂真不多，区区300块够吃一个月了😆", "creator": "婉婉上班吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 706, "gpm": 181.3031161473088, "engagement": 0.0028328611898017, "price": 128.0}, {"title": "养殖虾和海捕虾，真的不是一种虾", "creator": "鲜水湾", "type": "图文笔记", "gmv": 69.0, "exposure": 383, "gpm": 180.1566579634465, "engagement": 0.002610966057441253, "price": 69.0}, {"title": "谁说一个人做饭麻烦？5分钟搞定👩‍🍳", "creator": "菲菲上班吃什么", "type": "图文笔记", "gmv": 266.0, "exposure": 1482, "gpm": 179.4871794871795, "engagement": 0.001349527665317139, "price": 88.66666666666667}, {"title": "谁还去日料店啊，一整条才 300 来块", "creator": "鲜水湾", "type": "图文笔记", "gmv": 368.0, "exposure": 2072, "gpm": 177.6061776061776, "engagement": 0.001930501930501931, "price": 368.0}, {"title": "本以为69块没多少，没想到吃了整整一周…", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 128.0, "exposure": 746, "gpm": 171.5817694369973, "engagement": 0.001340482573726542, "price": 128.0}, {"title": "夏天能不能穿漂亮裙子，就靠你了！", "creator": "小柚练后吃什么", "type": "图文笔记", "gmv": 266.0, "exposure": 1559, "gpm": 170.6221937139192, "engagement": 0.001282873636946761, "price": 88.66666666666667}];
+
+// ======================== THEME ========================
+var theme = {
+  bg: '#1a1d27',
+  text: '#e5e7eb',
+  accent: '#ff2442',
+  grid: '#262a36',
+  colors: ['#5B8FF9','#5AD8A6','#F6BD16','#E86452','#6DC8EC','#945FB9','#FF9845','#1E9493']
+};
+
+// ======================== TREND DATA ========================
+var trendData = [
+  { period: '5月', gpm: 38.85, gmv: 79650, exposure: 2050217 },
+  { period: '6月', gpm: 34.62, gmv: 43438, exposure: 1254571 },
+  { period: '本周(6.23-7.3)', gpm: 131.93, gmv: 11997, exposure: 90932 }
+];
+
+var creatorGpmData = [
+  { name: '鲜水湾', may: 59.65, jun: 56.81, week: 27.16 },
+  { name: '菲菲上班吃什么', may: 31.22, jun: 23.25, week: 28.58 },
+  { name: '婉婉上班吃什么', may: 36.61, jun: 38.27, week: 11.39 },
+  { name: '小柚练后吃什么', may: 42.28, jun: 32.45, week: 78.91 }
+];
+
+var gpmDistData = [
+  { name: '0-100', value: 1387, pct: '93.9%' },
+  { name: '100-500', value: 75, pct: '5.1%' },
+  { name: '500-1000', value: 8, pct: '0.5%' },
+  { name: '1000-5000', value: 5, pct: '0.3%' },
+  { name: '5000+', value: 2, pct: '0.1%' }
+];
+
+var creatorContribData = [
+  { name: '菲菲上班吃什么', gmv: 38487, gpm: 31.22, notes: 71 },
+  { name: '鲜水湾', gmv: 25824, gpm: 59.65, notes: 63 },
+  { name: '小柚练后吃什么', gmv: 9360, gpm: 42.28, notes: 64 },
+  { name: '婉婉上班吃什么', gmv: 5979, gpm: 36.61, notes: 41 }
+];
+
+// ======================== CHART 1: TREND ========================
+function initTrend() {
+  var chart = echarts.init(document.getElementById('trendChart'));
+  var periods = trendData.map(function(d) { return d.period; });
+  var gpmValues = trendData.map(function(d) { return d.gpm; });
+  var gmvValues = trendData.map(function(d) { return d.gmv; });
+  var expValues = trendData.map(function(d) { return d.exposure; });
+
+  var changes = ['',
+    ((34.62-38.85)/38.85*100).toFixed(1) + '%',
+    ((131.93-34.62)/34.62*100).toFixed(1) + '%'
+  ];
+
+  var option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#222635',
+      borderColor: '#374151',
+      textStyle: { color: '#e5e7eb', fontSize: 13 },
+      formatter: function(params) {
+        var s = '<div style="font-weight:600;margin-bottom:6px">' + params[0].axisValue + '</div>';
+        for (var i = 0; i < params.length; i++) {
+          var p = params[i];
+          var val = p.seriesName === 'GPM' ? p.value.toFixed(2) :
+                    p.seriesName === 'GMV' ? '¥' + Number(p.value).toLocaleString() :
+                    Number(p.value).toLocaleString();
+          s += '<div style="display:flex;justify-content:space-between;gap:20px">' +
+            '<span>' + p.marker + ' ' + p.seriesName + '</span>' +
+            '<span style="font-weight:600">' + val + '</span></div>';
+        }
+        return s;
+      }
+    },
+    legend: {
+      data: ['GPM', 'GMV', '曝光量'],
+      textStyle: { color: '#9ca3af', fontSize: 12 },
+      top: 0,
+      right: 0
+    },
+    grid: { left: 60, right: 70, top: 40, bottom: 30 },
+    xAxis: {
+      type: 'category',
+      data: periods,
+      axisLine: { lineStyle: { color: '#374151' } },
+      axisLabel: { color: '#9ca3af', fontSize: 13, fontWeight: '600' },
+      axisTick: { show: false }
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: 'GPM',
+        nameTextStyle: { color: '#9ca3af', fontSize: 12 },
+        splitLine: { lineStyle: { color: '#1f2937', type: 'dashed' } },
+        axisLabel: { color: '#9ca3af' }
+      },
+      {
+        type: 'value',
+        name: 'GMV / 曝光量',
+        nameTextStyle: { color: '#9ca3af', fontSize: 12 },
+        splitLine: { show: false },
+        axisLabel: {
+          color: '#9ca3af',
+          formatter: function(v) {
+            if (v >= 1000000) return (v/10000).toFixed(0) + 'w';
+            if (v >= 10000) return (v/10000).toFixed(1) + 'w';
+            return v;
+          }
+        }
+      }
+    ],
+    series: [
+      {
+        name: 'GPM',
+        type: 'line',
+        data: gpmValues,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 12,
+        lineStyle: { color: '#ff2442', width: 3 },
+        itemStyle: { color: '#ff2442', borderColor: '#fff', borderWidth: 2 },
+        areaStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(255,36,66,0.3)' },
+              { offset: 1, color: 'rgba(255,36,66,0.02)' }
+            ]
+          }
+        },
+        label: {
+          show: true,
+          formatter: function(p) {
+            if (p.dataIndex === 2) return '↑' + changes[2];
+            if (p.dataIndex === 1) return changes[1];
+            return p.value.toFixed(2);
+          },
+          color: '#ff2442',
+          fontSize: 13,
+          fontWeight: 700,
+          position: 'top',
+          distance: 15
+        },
+        z: 10
+      },
+      {
+        name: 'GMV',
+        type: 'line',
+        yAxisIndex: 1,
+        data: gmvValues,
+        smooth: true,
+        symbol: 'diamond',
+        symbolSize: 10,
+        lineStyle: { color: '#F6BD16', width: 2, type: 'dashed' },
+        itemStyle: { color: '#F6BD16' },
+        label: {
+          show: true,
+          formatter: function(p) { return '¥' + (p.value/1000).toFixed(0) + 'k'; },
+          color: '#F6BD16',
+          fontSize: 11,
+          position: 'bottom'
+        }
+      },
+      {
+        name: '曝光量',
+        type: 'line',
+        yAxisIndex: 1,
+        data: expValues,
+        smooth: true,
+        symbol: 'triangle',
+        symbolSize: 10,
+        lineStyle: { color: '#5B8FF9', width: 2, type: 'dotted' },
+        itemStyle: { color: '#5B8FF9' },
+        label: {
+          show: true,
+          formatter: function(p) { return (p.value/10000).toFixed(0) + 'w'; },
+          color: '#5B8FF9',
+          fontSize: 11,
+          position: 'bottom'
+        }
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+// ======================== CHART 2: CREATOR GPM ========================
+function initCreatorGpm() {
+  var chart = echarts.init(document.getElementById('creatorGpmChart'));
+  var names = creatorGpmData.map(function(d) { return d.name; });
+  var option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#222635',
+      borderColor: '#374151',
+      textStyle: { color: '#e5e7eb' }
+    },
+    legend: {
+      data: ['5月GPM', '6月GPM', '本周GPM'],
+      textStyle: { color: '#9ca3af', fontSize: 11 },
+      top: 0,
+      right: 0
+    },
+    grid: { left: 50, right: 20, top: 40, bottom: 30 },
+    xAxis: {
+      type: 'category',
+      data: names,
+      axisLine: { lineStyle: { color: '#374151' } },
+      axisLabel: { color: '#9ca3af', fontSize: 11, interval: 0 }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'GPM',
+      nameTextStyle: { color: '#9ca3af' },
+      splitLine: { lineStyle: { color: '#1f2937', type: 'dashed' } },
+      axisLabel: { color: '#9ca3af' }
+    },
+    series: [
+      {
+        name: '5月GPM',
+        type: 'bar',
+        barWidth: '22%',
+        barGap: '10%',
+        data: creatorGpmData.map(function(d) {
+          return { value: d.may, itemStyle: { color: d.may >= d.jun ? '#ff2442' : '#5AD8A6' } };
+        }),
+        label: { show: true, position: 'top', color: '#9ca3af', fontSize: 10,
+          formatter: function(p) { return p.value.toFixed(1); } }
+      },
+      {
+        name: '6月GPM',
+        type: 'bar',
+        barWidth: '22%',
+        data: creatorGpmData.map(function(d) {
+          return { value: d.jun, itemStyle: { color: d.jun >= d.week ? '#F6BD16' : '#5B8FF9' } };
+        }),
+        label: { show: true, position: 'top', color: '#9ca3af', fontSize: 10,
+          formatter: function(p) { return p.value.toFixed(1); } }
+      },
+      {
+        name: '本周GPM',
+        type: 'bar',
+        barWidth: '22%',
+        data: creatorGpmData.map(function(d) { return d.week; }),
+        itemStyle: { color: '#6DC8EC' },
+        label: { show: true, position: 'top', color: '#9ca3af', fontSize: 10,
+          formatter: function(p) { return p.value.toFixed(1); } }
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+// ======================== CHART 3: GPM DIST PIE ========================
+function initGpmDist() {
+  var chart = echarts.init(document.getElementById('gpmDistChart'));
+  var colors = ['#374151','#5B8FF9','#F6BD16','#E86452','#ff2442'];
+  var option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      backgroundColor: '#222635',
+      borderColor: '#374151',
+      textStyle: { color: '#e5e7eb' },
+      formatter: function(p) {
+        return '<strong>' + p.name + '</strong><br/>笔记数: ' + p.value + '<br/>占比: ' + gpmDistData[p.dataIndex].pct;
+      }
+    },
+    graphic: [
+      {
+        type: 'text',
+        left: 'center',
+        top: '48%',
+        style: {
+          text: '1,477\n总笔记数',
+          fill: '#9ca3af',
+          fontSize: 13,
+          lineHeight: 20,
+          textAlign: 'center'
+        }
+      }
+    ],
+    series: [{
+      type: 'pie',
+      radius: ['48%', '72%'],
+      center: ['50%', '50%'],
+      avoidLabelOverlap: true,
+      padAngle: 2,
+      itemStyle: { borderRadius: 4 },
+      label: {
+        show: true,
+        formatter: function(p) {
+          return '{name|' + p.name + '}\n{pct|' + gpmDistData[p.dataIndex].pct + '}';
+        },
+        rich: {
+          name: { color: '#e5e7eb', fontSize: 12, lineHeight: 18 },
+          pct: { color: '#9ca3af', fontSize: 11, lineHeight: 16 }
+        }
+      },
+      labelLine: { lineStyle: { color: '#374151' } },
+      data: gpmDistData.map(function(d, i) {
+        return { value: d.value, name: d.name, itemStyle: { color: colors[i] } };
+      })
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+// ======================== CHART 4: CREATOR CONTRIB ========================
+function initCreatorContrib() {
+  var chart = echarts.init(document.getElementById('creatorContribChart'));
+  var sorted = creatorContribData.slice().sort(function(a, b) { return b.gmv - a.gmv; });
+  var names = sorted.map(function(d) { return d.name; });
+  var option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#222635',
+      borderColor: '#374151',
+      textStyle: { color: '#e5e7eb' },
+      formatter: function(params) {
+        var s = '<div style="font-weight:600;margin-bottom:6px">' + params[0].axisValue + '</div>';
+        for (var i = 0; i < params.length; i++) {
+          var p = params[i];
+          var val = p.seriesName === '总GMV' ? '¥' + Number(p.value).toLocaleString() : p.value.toFixed(2);
+          s += '<div>' + p.marker + ' ' + p.seriesName + ': <strong>' + val + '</strong></div>';
+        }
+        return s;
+      }
+    },
+    grid: { left: 55, right: 55, top: 30, bottom: 30 },
+    xAxis: {
+      type: 'category',
+      data: names,
+      axisLine: { lineStyle: { color: '#374151' } },
+      axisLabel: { color: '#9ca3af', fontSize: 12 }
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: 'GMV',
+        nameTextStyle: { color: '#9ca3af' },
+        splitLine: { lineStyle: { color: '#1f2937', type: 'dashed' } },
+        axisLabel: { color: '#9ca3af',
+          formatter: function(v) { return '¥' + (v/1000).toFixed(0) + 'k'; } }
+      },
+      {
+        type: 'value',
+        name: 'GPM',
+        nameTextStyle: { color: '#9ca3af' },
+        splitLine: { show: false },
+        min: 0,
+        axisLabel: { color: '#9ca3af' }
+      }
+    ],
+    series: [
+      {
+        name: '总GMV',
+        type: 'bar',
+        barWidth: '40%',
+        data: sorted.map(function(d) {
+          return {
+            value: d.gmv,
+            itemStyle: {
+              color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                colorStops: [
+                  { offset: 0, color: '#ff2442' },
+                  { offset: 1, color: 'rgba(255,36,66,0.4)' }
+                ]
+              },
+              borderRadius: [4,4,0,0]
+            }
+          };
+        }),
+        label: { show: true, position: 'top', color: '#ff2442', fontSize: 11, fontWeight: 600,
+          formatter: function(p) { return '¥' + (p.value/1000).toFixed(0) + 'k'; } }
+      },
+      {
+        name: '平均GPM',
+        type: 'line',
+        yAxisIndex: 1,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 10,
+        lineStyle: { color: '#5AD8A6', width: 3 },
+        itemStyle: { color: '#5AD8A6', borderColor: '#fff', borderWidth: 2 },
+        data: sorted.map(function(d) { return d.gpm; }),
+        label: { show: true, position: 'top', color: '#5AD8A6', fontSize: 11, fontWeight: 600,
+          formatter: function(p) { return p.value.toFixed(1); } },
+        areaStyle: {
+          color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(90,216,166,0.25)' },
+              { offset: 1, color: 'rgba(90,216,166,0.02)' }
+            ]
+          }
+        }
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+// ======================== CHART 5: IMAGE VS VIDEO ========================
+function initImgVsVideo() {
+  var chart = echarts.init(document.getElementById('imgVsVideoChart'));
+  var option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      backgroundColor: '#222635',
+      borderColor: '#374151',
+      textStyle: { color: '#e5e7eb' }
+    },
+    grid: [
+      { left: 60, right: 20, top: 10, height: '38%' },
+      { left: 60, right: 20, top: '52%', height: '38%' }
+    ],
+    xAxis: [
+      {
+        gridIndex: 0,
+        type: 'category',
+        data: ['图文笔记', '视频笔记'],
+        axisLine: { lineStyle: { color: '#374151' } },
+        axisLabel: { color: '#9ca3af' }
+      },
+      {
+        gridIndex: 1,
+        type: 'category',
+        data: ['图文笔记', '视频笔记'],
+        axisLine: { lineStyle: { color: '#374151' } },
+        axisLabel: { color: '#9ca3af' }
+      }
+    ],
+    yAxis: [
+      {
+        gridIndex: 0,
+        type: 'value',
+        name: 'GMV占比 (%)',
+        nameTextStyle: { color: '#9ca3af', fontSize: 11 },
+        splitLine: { lineStyle: { color: '#1f2937', type: 'dashed' } },
+        axisLabel: { color: '#9ca3af', formatter: function(v) { return v + '%'; } },
+        max: 100
+      },
+      {
+        gridIndex: 1,
+        type: 'value',
+        name: '平均GPM',
+        nameTextStyle: { color: '#9ca3af', fontSize: 11 },
+        splitLine: { lineStyle: { color: '#1f2937', type: 'dashed' } },
+        axisLabel: { color: '#9ca3af' }
+      }
+    ],
+    series: [
+      {
+        name: 'GMV占比',
+        type: 'bar',
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        barWidth: '50%',
+        data: [
+          { value: 99.2, itemStyle: { color: '#ff2442', borderRadius: [4,4,0,0] } },
+          { value: 0.8, itemStyle: { color: '#5B8FF9', borderRadius: [4,4,0,0] } }
+        ],
+        label: { show: true, position: 'top', color: '#e5e7eb', fontSize: 13, fontWeight: 700,
+          formatter: function(p) { return p.value + '%'; } }
+      },
+      {
+        name: '平均GPM',
+        type: 'bar',
+        xAxisIndex: 1,
+        yAxisIndex: 1,
+        barWidth: '50%',
+        data: [
+          { value: 212.62, itemStyle: { color: '#ff2442', borderRadius: [4,4,0,0] } },
+          { value: 200.30, itemStyle: { color: '#5B8FF9', borderRadius: [4,4,0,0] } }
+        ],
+        label: { show: true, position: 'top', color: '#e5e7eb', fontSize: 13, fontWeight: 700,
+          formatter: function(p) { return p.value.toFixed(1); } }
+      }
+    ],
+    graphic: [
+      {
+        type: 'text', left: 'center', top: '41%',
+        style: { text: '▼ GMV占比', fill: '#6b7280', fontSize: 11, textAlign: 'center' }
+      },
+      {
+        type: 'text', left: 'center', bottom: '2%',
+        style: { text: '▼ 平均GPM（有GMV笔记）', fill: '#6b7280', fontSize: 11, textAlign: 'center' }
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+// ======================== CHART 6: SCATTER ========================
+function initScatter(data) {
+  var chart = echarts.init(document.getElementById('scatterChart'));
+  var creatorColors = {
+    '鲜水湾': '#5B8FF9',
+    '菲菲上班吃什么': '#ff2442',
+    '婉婉上班吃什么': '#F6BD16',
+    '小柚练后吃什么': '#5AD8A6'
+  };
+  var creatorMap = {};
+  data.forEach(function(d) {
+    if (!creatorMap[d.creator]) creatorMap[d.creator] = [];
+    creatorMap[d.creator].push([d.x, d.y, d.gmv, d.title, d.type]);
+  });
+
+  var seriesData = Object.keys(creatorMap).map(function(name) {
+    return {
+      name: name,
+      type: 'scatter',
+      data: creatorMap[name],
+      symbolSize: function(val) { return Math.max(6, Math.min(20, Math.sqrt(val[2]) * 0.12)); },
+      itemStyle: {
+        color: creatorColors[name] || '#5B8FF9',
+        opacity: 0.8,
+        borderColor: 'rgba(255,255,255,0.3)',
+        borderWidth: 1
+      },
+      emphasis: {
+        itemStyle: { opacity: 1, borderColor: '#fff', borderWidth: 2 }
+      }
+    };
+  });
+
+  var option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      backgroundColor: '#222635',
+      borderColor: '#374151',
+      textStyle: { color: '#e5e7eb', fontSize: 13 },
+      formatter: function(params) {
+        var d = params.data;
+        if (!d || !d.length) return '';
+        return '<div style="font-weight:600;margin-bottom:4px">' + (d[3] || '笔记') + '</div>' +
+          '<div>创作者: ' + params.seriesName + '</div>' +
+          '<div>曝光量: ' + Number(d[0]).toLocaleString() + '</div>' +
+          '<div>GPM: ' + d[1].toFixed(2) + '</div>' +
+          '<div>GMV: ¥' + d[2].toFixed(0) + '</div>' +
+          '<div style="font-size:11px;color:#6b7280;margin-top:2px">' + (d[4] || '') + '</div>';
+      }
+    },
+    legend: {
+      data: Object.keys(creatorColors),
+      textStyle: { color: '#9ca3af', fontSize: 12 },
+      top: 0,
+      right: 0
+    },
+    grid: { left: 65, right: 20, top: 40, bottom: 30 },
+    xAxis: {
+      type: 'log',
+      name: '曝光量',
+      nameTextStyle: { color: '#9ca3af', fontSize: 12 },
+      splitLine: { lineStyle: { color: '#1f2937', type: 'dashed' } },
+      axisLabel: { color: '#9ca3af',
+        formatter: function(v) { return v >= 10000 ? (v/10000).toFixed(0) + 'w' : v; } },
+      axisLine: { lineStyle: { color: '#374151' } },
+      min: 10,
+      max: 1000000
+    },
+    yAxis: {
+      type: 'value',
+      name: 'GPM',
+      nameTextStyle: { color: '#9ca3af', fontSize: 12 },
+      splitLine: { lineStyle: { color: '#1f2937', type: 'dashed' } },
+      axisLabel: { color: '#9ca3af' }
+    },
+    series: seriesData,
+    visualMap: false
+  };
+  chart.setOption(option);
+
+  // Add mark area for high-GPM zone
+  if (data.length > 0) {
+    chart.setOption({
+      series: seriesData.map(function(s, i) {
+        if (i === 0) {
+          return Object.assign({}, s, {
+            markArea: {
+              silent: true,
+              data: [
+                [
+                  { xAxis: 10, yAxis: 1000,
+                    itemStyle: { color: 'rgba(255,36,66,0.06)', borderColor: 'rgba(255,36,66,0.25)', borderWidth: 1 } },
+                  { xAxis: 1000, yAxis: 10000 }
+                ]
+              ],
+              label: {
+                show: true, position: 'inside',
+                formatter: '高GPM区域\n(潜在爆款)',
+                color: 'rgba(255,36,66,0.4)', fontSize: 11, fontWeight: 600
+              }
+            }
+          });
+        }
+        return s;
+      })
+    });
+  }
+
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+// ======================== TABLE ========================
+var tableData = [];
+var sortConfig = { col: 6, asc: false };
+
+function renderTable(data) {
+  var tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  data.forEach(function(row, i) {
+    var rank = i + 1;
+    var rankClass = 'rank';
+    if (rank === 1) rankClass += ' top1';
+    else if (rank === 2) rankClass += ' top2';
+    else if (rank === 3) rankClass += ' top3';
+
+    var gpmClass = 'gpm-low';
+    if (row.gpm > 1000) gpmClass = 'gpm-high';
+    else if (row.gpm > 500) gpmClass = 'gpm-mid';
+
+    var typeClass = row.type.indexOf('视频') !== -1 ? 'video' : 'img';
+    var typeLabel = row.type.indexOf('视频') !== -1 ? '视频' : '图文';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="' + rankClass + '">' + rank + '</td>' +
+      '<td class="title-cell" title="' + row.title.replace(/"/g,'&quot;') + '">' + row.title + '</td>' +
+      '<td><span class="creator-tag">' + row.creator + '</span></td>' +
+      '<td><span class="type-tag ' + typeClass + '">' + typeLabel + '</span></td>' +
+      '<td style="color:#e5e7eb">¥' + Number(row.gmv).toLocaleString() + '</td>' +
+      '<td style="color:#9ca3af">' + Number(row.exposure).toLocaleString() + '</td>' +
+      '<td class="' + gpmClass + '">' + row.gpm.toFixed(2) + '</td>' +
+      '<td style="color:#9ca3af">' + (row.engagement * 100).toFixed(2) + '%</td>' +
+      '<td style="color:#e5e7eb">¥' + row.price.toFixed(0) + '</td>';
+    tbody.appendChild(tr);
+  });
+  document.getElementById('tableInfo').textContent = '共 ' + data.length + ' 条记录';
+}
+
+function sortTable(col) {
+  if (sortConfig.col === col) {
+    sortConfig.asc = !sortConfig.asc;
+  } else {
+    sortConfig.col = col;
+    sortConfig.asc = (col === 6) ? false : true;
+  }
+  var keys = ['rank', 'title', 'creator', 'type', 'gmv', 'exposure', 'gpm', 'engagement', 'price'];
+  var key = keys[col];
+  var numericKeys = ['gmv','exposure','gpm','engagement','price','rank'];
+
+  tableData.sort(function(a, b) {
+    var va = (col === 0) ? 0 : a[key];
+    var vb = (col === 0) ? 0 : b[key];
+    if (numericKeys.indexOf(key) !== -1) {
+      va = Number(va); vb = Number(vb);
+    } else {
+      va = String(va); vb = String(vb);
+    }
+    return sortConfig.asc ? va - vb : vb - va;
+  });
+
+  renderTable(tableData);
+
+  var ths = document.querySelectorAll('.data-table thead th');
+  for (var i = 0; i < ths.length; i++) {
+    ths[i].classList.toggle('sorted', i === col);
+  }
+}
+
+function applyFilters() {
+  var creator = document.getElementById('creatorFilter').value;
+  var minGpm = parseFloat(document.getElementById('minGpm').value) || 0;
+  var filtered = EMBEDDED_TOP50.filter(function(item) {
+    if (creator !== 'all' && item.creator !== creator) return false;
+    if (item.gpm < minGpm) return false;
+    return true;
+  });
+  tableData = filtered;
+  renderTable(tableData);
+}
+
+// ======================== LOAD DATA & INIT ========================
+// Data already embedded - initialize directly
+tableData = EMBEDDED_TOP50;
+renderTable(tableData);
+initScatter(EMBEDDED_SCATTER);
+
+// Initialize all other charts (data is inline)
+initTrend();
+initCreatorGpm();
+initGpmDist();
+initCreatorContrib();
+initImgVsVideo();
+</script>
+</body>
+</html>

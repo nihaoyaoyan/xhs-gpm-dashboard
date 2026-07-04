@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书店铺 · GPM数据看板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #0e1117;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+.header {
+  background: linear-gradient(135deg, #0e1117 0%, #1a1a2e 50%, #16213e 100%);
+  border-bottom: 2px solid #ff2442;
+  padding: 48px 24px 32px;
+  text-align: center;
+}
+.header h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #ff2442, #ff6b6b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.header p { color: #888; font-size: 0.95rem; }
+.header .sub { color: #555; font-size: 0.8rem; margin-top: 4px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+/* Timeline style */
+.timeline { position: relative; padding: 20px 0; }
+.timeline::before {
+  content: ''; position: absolute; left: 120px; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(180deg, #ff2442, #4a6cf7);
+}
+.month-group { margin-bottom: 32px; }
+.month-label {
+  position: relative; padding-left: 148px; margin-bottom: 16px;
+  font-size: 1.3rem; font-weight: 700; color: #ff2442;
+}
+.month-label::before {
+  content: ''; position: absolute; left: 114px; top: 50%;
+  width: 14px; height: 14px; background: #ff2442;
+  border-radius: 50%; transform: translateY(-50%);
+  border: 3px solid #0e1117; box-shadow: 0 0 0 2px #ff2442;
+}
+.report-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; padding-left: 148px;
+}
+@media (max-width: 768px) {
+  .timeline::before { left: 20px; }
+  .month-label { padding-left: 48px; }
+  .report-grid { padding-left: 48px; grid-template-columns: 1fr; }
+  .month-label::before { left: 14px; }
+}
+.report-card {
+  background: #1a1d28; border-radius: 10px; padding: 16px;
+  border: 1px solid #2a2d3a; transition: all 0.2s;
+  text-decoration: none; color: #e0e0e0; display: flex;
+  align-items: center; gap: 12px;
+}
+.report-card:hover {
+  border-color: #ff2442; transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255,36,66,0.15);
+}
+.card-icon {
+  width: 40px; height: 40px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; flex-shrink: 0;
+}
+.icon-dash { background: #ff2442; }
+.icon-report { background: #4a6cf7; }
+.card-info { flex: 1; min-width: 0; }
+.card-info .title { font-weight: 600; font-size: 0.9rem; }
+.card-info .desc { font-size: 0.75rem; color: #888; margin-top: 2px; }
+.card-info .size { font-size: 0.7rem; color: #555; margin-top: 1px; }
+.badge { font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+.badge-new { background: #ff2442; color: #fff; }
+.badge-hot { background: #ff6b35; color: #fff; }
+
+/* Summary cards */
+.summary-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 40px;
+}
+.summary-card {
+  background: #1a1d28; border-radius: 12px; padding: 20px;
+  border: 1px solid #2a2d3a; text-align: center;
+}
+.summary-card .num {
+  font-size: 1.8rem; font-weight: 800; color: #ff2442;
+}
+.summary-card .label { font-size: 0.8rem; color: #888; margin-top: 4px; }
+
+/* How-to section */
+.howto {
+  background: #1a1d28; border-radius: 12px; padding: 24px;
+  border: 1px solid #2a2d3a; margin-top: 40px;
+}
+.howto h3 { color: #ff2442; margin-bottom: 12px; font-size: 1rem; }
+.howto ol { padding-left: 20px; color: #aaa; font-size: 0.85rem; line-height: 2; }
+.howto code {
+  background: #2a2d3a; padding: 2px 8px; border-radius: 4px;
+  font-size: 0.8rem; color: #ff6b6b;
+}
+
+.footer {
+  text-align: center; padding: 24px; color: #444;
+  font-size: 0.75rem; border-top: 1px solid #1a1d28; margin-top: 40px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 小红书 GPM 数据看板</h1>
+  <p>鲜水湾 · 矩阵账号运营数据监控</p>
+  <div class="sub">数据更新至 2026年7月 · 每日自动分析</div>
+</div>
+
+<div class="container">
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="num">6,756</div>
+      <div class="label">累计分析笔记数</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">¥235K</div>
+      <div class="label">累计总GMV</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">5</div>
+      <div class="label">覆盖月份</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">4</div>
+      <div class="label">矩阵创作者</div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline">
+
+    <div class="month-group">
+      <div class="month-label">📅 2026年3月</div>
+      <div class="report-grid">
+        <a class="report-card" href="reports/3月GPM仪表盘.html">
+          <div class="card-icon icon-dash">📈</div>
+          <div class="card-info">
+            <div class="title">3月GPM仪表盘</div>
+            <div class="desc">暗色看板 · GPM 37.19 · 有GMV 22.3%</div>
+          </div>
+        </a>
+        <a class="report-card" href="reports/3月GPM分析报告.html">
+          <div class="card-icon icon-report">📑</div>
+          <div class="card-info">
+            <div class="title">3月GPM分析报告</div>
+            <div class="desc">结构化报告 · 641篇笔记 · ¥22,259 GMV</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="month-group">
+      <div class="month-label">📅 2026年4月 <span class="badge badge-hot">GMV峰值</span></div>
+      <div class="report-grid">
+        <a class="report-card" href="reports/4月GPM仪表盘.html">
+          <div class="card-icon icon-dash">📈</div>
+          <div class="card-info">
+            <div class="title">4月GPM仪表盘</div>
+            <div class="desc">暗色看板 · GPM 54.10 · Q2峰值月</div>
+          </div>
+        </a>
+        <a class="report-card" href="reports/4月GPM分析报告.html">
+          <div class="card-icon icon-report">📑</div>
+          <div class="card-info">
+            <div class="title">4月GPM分析报告</div>
+            <div class="desc">结构化报告 · 990篇笔记 · ¥89,390 GMV</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="month-group">
+      <div class="month-label">📅 2026年5月</div>
+      <div class="report-grid">
+        <a class="report-card" href="reports/5月GPM仪表盘.html">
+          <div class="card-icon icon-dash">📈</div>
+          <div class="card-info">
+            <div class="title">5月GPM仪表盘</div>
+            <div class="desc">暗色看板 · GPM 38.85 · 视频GPM 77.55</div>
+          </div>
+        </a>
+        <a class="report-card" href="reports/5月GPM分析报告.html">
+          <div class="card-icon icon-report">📑</div>
+          <div class="card-info">
+            <div class="title">5月GPM分析报告</div>
+            <div class="desc">结构化报告 · 1,477篇笔记 · ¥79,650 GMV</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="month-group">
+      <div class="month-label">📅 2026年6月 <span class="badge badge-hot">曝光峰值</span></div>
+      <div class="report-grid">
+        <a class="report-card" href="reports/GPM仪表盘.html">
+          <div class="card-icon icon-dash">📈</div>
+          <div class="card-info">
+            <div class="title">6月GPM仪表盘</div>
+            <div class="desc">暗色看板 · GPM 34.62 · 1,805篇笔记</div>
+          </div>
+        </a>
+        <a class="report-card" href="reports/GPM分析报告.html">
+          <div class="card-icon icon-report">📑</div>
+          <div class="card-info">
+            <div class="title">6月GPM分析报告</div>
+            <div class="desc">结构化报告 · 互动率r=0.67 · 66条潜力爆款</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Q2 Overview -->
+  <div style="margin-top: 32px;">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <a class="report-card" href="reports/全Q2_GPM仪表盘.html" style="grid-column:1/-1;">
+        <div class="card-icon icon-dash">📊</div>
+        <div class="card-info">
+          <div class="title">全Q2 GPM趋势仪表盘 <span class="badge badge-new">全景</span></div>
+          <div class="desc">3月→4月→5月→6月→本周 五期趋势 · 创作者演进 · 视频GPM追踪</div>
+        </div>
+      </a>
+      <a class="report-card" href="reports/全Q2_GPM分析报告.html" style="grid-column:1/-1;">
+        <div class="card-icon icon-report">📑</div>
+        <div class="card-info">
+          <div class="title">全Q2 GPM趋势分析报告 <span class="badge badge-new">全景</span></div>
+          <div class="desc">五期全量对比 · 创作者分化 · 视频异常信号 · P0-P2行动建议</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- How-to -->
+  <div class="howto">
+    <h3>📌 每日数据更新流程</h3>
+    <ol>
+      <li>从 <strong>小红书商家后台</strong> 导出最新一天的 <code>商品笔记数据.xlsx</code> + <code>笔记维度数据.xlsx</code></li>
+      <li>将两个文件上传到我的对话框</li>
+      <li>说一句 <code>"分析今天的数据，更新到GPM看板"</code></li>
+      <li>我将自动完成：数据合并 → GPM计算 → 仪表盘/报告更新 → 推送到GitHub Pages</li>
+    </ol>
+  </div>
+
+</div>
+
+<div class="footer">
+  小红书 GPM 数据看板 · 由 智数分析专家团 自动生成 · Powered by WorkBuddy
+</div>
+
+</body>
+</html>

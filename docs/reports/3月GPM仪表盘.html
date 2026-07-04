@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书3月GPM分析仪表盘</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0e1117;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  min-height: 100vh;
+  padding: 20px;
+}
+.container { max-width: 1440px; margin: 0 auto; }
+.header {
+  text-align: center; padding: 24px 0 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 28px;
+}
+.header h1 {
+  font-size: 28px; font-weight: 700; letter-spacing: 1px;
+  background: linear-gradient(135deg, #ff2442 0%, #ff6b81 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header .subtitle {
+  font-size: 14px; color: #888; margin-top: 6px; letter-spacing: 0.5px;
+}
+
+/* KPI Cards */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  margin-bottom: 24px;
+}
+.kpi-card {
+  background: linear-gradient(135deg, #1a1d2e 0%, #151828 100%);
+  border: 1px solid rgba(255,36,66,0.12);
+  border-radius: 14px; padding: 22px 20px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(255,36,66,0.15); }
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #ff2442, #ff6b81);
+}
+.kpi-label { font-size: 12px; color: #999; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }
+.kpi-value { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+.kpi-value .highlight { color: #ff2442; }
+.kpi-sub { font-size: 12px; color: #777; margin-top: 4px; }
+.kpi-card:nth-child(2) .kpi-value { color: #ff6b81; }
+.kpi-card:nth-child(3) .kpi-value { color: #f6bd16; }
+.kpi-card:nth-child(4) .kpi-value { color: #5AD8A6; }
+
+/* Charts Grid */
+.chart-grid-2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
+}
+.chart-full { margin-bottom: 16px; }
+.chart-box {
+  background: #151828; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px; padding: 16px; position: relative;
+}
+.chart-title {
+  font-size: 15px; font-weight: 600; color: #ccc;
+  padding: 4px 0 12px 4px; letter-spacing: 0.3px;
+}
+.chart-title .badge {
+  display: inline-block; font-size: 11px; font-weight: 500;
+  background: rgba(255,36,66,0.15); color: #ff6b81;
+  padding: 2px 10px; border-radius: 10px; margin-left: 8px;
+  vertical-align: middle;
+}
+.chart-container { width: 100%; height: 380px; }
+
+/* Table */
+.table-wrapper {
+  background: #151828; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px; overflow: hidden;
+}
+.table-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px 12px;
+}
+.table-header .chart-title { padding: 0; }
+.table-controls { display: flex; gap: 12px; align-items: center; }
+.table-controls span { font-size: 12px; color: #888; }
+.sort-btns { display: flex; gap: 4px; }
+.sort-btn {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+  color: #aaa; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+  font-size: 11px; transition: all 0.2s;
+}
+.sort-btn:hover { background: rgba(255,36,66,0.15); border-color: rgba(255,36,66,0.3); color: #ff6b81; }
+.sort-btn.active { background: rgba(255,36,66,0.2); border-color: #ff2442; color: #ff2442; }
+table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+thead th {
+  background: rgba(255,255,255,0.03);
+  color: #999; font-weight: 600; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 12px 16px; text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: sticky; top: 0; cursor: pointer; user-select: none;
+}
+thead th:hover { color: #ddd; }
+tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.15s;
+}
+tbody tr:hover { background: rgba(255,36,66,0.05); }
+tbody td { padding: 10px 16px; color: #ccc; }
+tbody tr:nth-child(1) td:first-child::before { content: '🥇 '; }
+tbody tr:nth-child(2) td:first-child::before { content: '🥈 '; }
+tbody tr:nth-child(3) td:first-child::before { content: '🥉 '; }
+.rank-col { width: 60px; color: #888 !important; font-weight: 600; }
+.id-col { font-family: 'SF Mono', 'Menlo', monospace; font-size: 12px; color: #777 !important; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.creator-col { color: #ddd; font-weight: 500; }
+.gmv-col { color: #ff6b81 !important; font-weight: 600; }
+.exposure-col { color: #5AD8A6 !important; }
+.gpm-col { color: #fff !important; font-weight: 700; font-size: 14px; }
+
+/* Sort indicators */
+.sort-indicator { margin-left: 4px; opacity: 0.6; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid-2 { grid-template-columns: 1fr; }
+  .kpi-value { font-size: 26px; }
+}
+@media (max-width: 500px) {
+  .kpi-row { grid-template-columns: 1fr; }
+  body { padding: 10px; }
+  .chart-container { height: 300px; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Tooltip style override */
+.echart-tooltip { background: rgba(20,23,40,0.95) !important; border-color: rgba(255,36,66,0.3) !important; backdrop-filter: blur(8px); }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>📊 小红书 3月 GPM 分析仪表盘</h1>
+    <div class="subtitle">数据周期：2025年3月 ｜ 匹配笔记 641 篇 ｜ 有GMV笔记 143 篇</div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">📈 整体 GPM</div>
+      <div class="kpi-value"><span class="highlight">37.19</span></div>
+      <div class="kpi-sub">每千次曝光带来 ¥37.19 GMV</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">💰 总 GMV</div>
+      <div class="kpi-value">¥22,259</div>
+      <div class="kpi-sub">3月累计成交金额</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">📝 有GMV笔记</div>
+      <div class="kpi-value">143 <span style="font-size:18px;color:#888;">/ 641</span></div>
+      <div class="kpi-sub">占比 22.3% ｜ 转化潜力巨大</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">🏆 GPM 最高</div>
+      <div class="kpi-value">940.48</div>
+      <div class="kpi-sub">鲜水湾 · 单篇笔记最高纪录</div>
+    </div>
+  </div>
+
+  <!-- Row 1: Creator GPM + GPM Distribution -->
+  <div class="chart-grid-2">
+    <div class="chart-box">
+      <div class="chart-title">👤 创作者 GPM 对比 <span class="badge">有GMV笔记均值</span></div>
+      <div class="chart-container" id="chart-creator-gpm"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">📊 GPM 分布 <span class="badge">641篇笔记</span></div>
+      <div class="chart-container" id="chart-gpm-dist"></div>
+    </div>
+  </div>
+
+  <!-- Row 2: 4 Creators GMV Contribution (full width) -->
+  <div class="chart-full">
+    <div class="chart-box">
+      <div class="chart-title">🍰 创作者 GMV 贡献 <span class="badge">4位创作者</span></div>
+      <div class="chart-container" id="chart-gmv-contrib"></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Top 20 Table -->
+  <div class="chart-full">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <div class="chart-title">🏅 Top 20 高 GPM 笔记 <span class="badge">可排序</span></div>
+        <div class="table-controls">
+          <span>排序：</span>
+          <div class="sort-btns">
+            <button class="sort-btn active" data-sort="gpm-desc">GPM ↓</button>
+            <button class="sort-btn" data-sort="gpm-asc">GPM ↑</button>
+            <button class="sort-btn" data-sort="gmv-desc">GMV ↓</button>
+          </div>
+        </div>
+      </div>
+      <div style="max-height:500px;overflow-y:auto;">
+        <table id="top20-table">
+          <thead>
+            <tr>
+              <th style="width:50px">#</th>
+              <th style="width:200px">笔记 ID</th>
+              <th>创作者</th>
+              <th style="width:100px">GMV (¥)</th>
+              <th style="width:100px">曝光量</th>
+              <th style="width:100px">GPM</th>
+            </tr>
+          </thead>
+          <tbody id="top20-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const DATA = {
+  // Creator GPM (有GMV笔记计算)
+  creatorGPM: [
+    { name: '鲜水湾', gpm: 61.03, gmv: 10390, count: 63, exposure: 170232 },
+    { name: '婉婉上班吃什么', gpm: 74.48, gmv: 8228, count: 50, exposure: 110471 },
+    { name: '菲菲上班吃什么', gpm: 50.10, gmv: 3087, count: 24, exposure: 61615 },
+    { name: '小柚练后吃什么', gpm: 92.38, gmv: 554, count: 6, exposure: 5996 }
+  ],
+  // GPM distribution
+  gpmDist: [
+    { name: '无GMV（0）', value: 498, color: '#2d2d3a' },
+    { name: '0 ~ 50', value: 45, color: '#5B8FF9' },
+    { name: '50 ~ 100', value: 59, color: '#5AD8A6' },
+    { name: '100 ~ 500', value: 37, color: '#F6BD16' },
+    { name: '500+', value: 2, color: '#ff2442' }
+  ],
+  // Top 20
+  top20: [
+    { rank:1, id:'699fb39f0000000028020ca2', creator:'鲜水湾', title:'控体期提前结束！大功臣是海捕大虾！🎉', gmv:79.0, exposure:84, gpm:940.48 },
+    { rank:2, id:'6986f477000000002800b5b6', creator:'鲜水湾', title:'青岛🚗整条三文鱼礼盒已经 next level', gmv:116.0, exposure:200, gpm:580.00 },
+    { rank:3, id:'6916f37a00000000050114f9', creator:'婉婉上班吃什么', title:'不要低估50💰的购买力，敞开吃吧……', gmv:109.9, exposure:263, gpm:417.87 },
+    { rank:4, id:'69cb66cb000000002301e83e', creator:'婉婉上班吃什么', title:'奉劝现在的年轻人不要低估了300块的购买力', gmv:396.0, exposure:1147, gpm:345.25 },
+    { rank:5, id:'69895362000000000b009467', creator:'小柚练后吃什么', title:'不要低估了300来块的购买力，能买八九斤……', gmv:66.0, exposure:218, gpm:302.75 },
+    { rank:6, id:'69b132b60000000006008aed', creator:'婉婉上班吃什么', title:'以为300块没多少，结果吃了半个月', gmv:363.0, exposure:1359, gpm:267.11 },
+    { rank:7, id:'69ca9b20000000001b022f98', creator:'婉婉上班吃什么', title:'完全低估了300多的购买力…', gmv:333.0, exposure:1467, gpm:226.99 },
+    { rank:8, id:'69a9695d000000000e03e9cb', creator:'鲜水湾', title:'和老爸商量后，加急定制独居人小包装', gmv:196.0, exposure:886, gpm:221.22 },
+    { rank:9, id:'69cbdd72000000002301f884', creator:'菲菲上班吃什么', title:'脱脂牛马带饭启发', gmv:276.0, exposure:1356, gpm:203.54 },
+    { rank:10, id:'69abf19e0000000022032f19', creator:'小柚练后吃什么', title:'第一次对爬坡后吃快碳+蛋白起了敬意……', gmv:236.0, exposure:1218, gpm:193.76 },
+    { rank:11, id:'69b912070000000020039d0b', creator:'婉婉上班吃什么', title:'泪水打湿减脂餐！这虾仁怎么能这么好吃啊！！', gmv:207.0, exposure:1172, gpm:176.62 },
+    { rank:12, id:'69b5000d00000000220289ed', creator:'婉婉上班吃什么', title:'奉劝女孩们对70的购买力有点概念！', gmv:541.0, exposure:3265, gpm:165.70 },
+    { rank:13, id:'69c625700000000023014616', creator:'婉婉上班吃什么', title:'姐的体态直接焊亖在高蛋白上！', gmv:197.0, exposure:1221, gpm:161.34 },
+    { rank:14, id:'69ca07a600000000220243b5', creator:'婉婉上班吃什么', title:'100来块解决我半个月的上班带饭', gmv:178.0, exposure:1136, gpm:156.69 },
+    { rank:15, id:'69c9d7ec0000000023016d9a', creator:'婉婉上班吃什么', title:'拒绝外卖！一个人吃不腻的干净饭', gmv:167.0, exposure:1098, gpm:152.09 },
+    { rank:16, id:'693ad1d4000000001e02025e', creator:'鲜水湾', title:'不愧是健身教练推荐的！抗炎神器', gmv:179.0, exposure:1193, gpm:150.04 },
+    { rank:17, id:'69ae737e000000001a0265ad', creator:'婉婉上班吃什么', title:'控体期不知道回购了多少袋的虾仁', gmv:96.0, exposure:657, gpm:146.12 },
+    { rank:18, id:'69b4f5df000000001b020b79', creator:'鲜水湾', title:'能接受没有保水剂虾仁的，年后控体你们就买', gmv:385.0, exposure:2782, gpm:138.39 },
+    { rank:19, id:'69c3ab55000000002003b156', creator:'婉婉上班吃什么', title:'自律期吃虾仁，等夏天惊艳所有人✨', gmv:197.0, exposure:1437, gpm:137.09 },
+    { rank:20, id:'69c641a500000000230154c3', creator:'鲜水湾', title:'感谢315，让我家虾仁被更多人看到🥹', gmv:247.0, exposure:1870, gpm:132.09 }
+  ]
+};
+
+// ============================================================
+// DARK THEME
+// ============================================================
+const darkTheme = {
+  backgroundColor: 'transparent',
+  textStyle: { color: '#ccc' },
+  title: { textStyle: { color: '#ccc' } },
+  legend: { textStyle: { color: '#999' } },
+  tooltip: {
+    backgroundColor: 'rgba(20,23,40,0.95)',
+    borderColor: 'rgba(255,36,66,0.3)',
+    borderWidth: 1,
+    textStyle: { color: '#e0e0e0', fontSize: 13 },
+    extraCssText: 'backdrop-filter: blur(8px); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);'
+  }
+};
+
+// ============================================================
+// CHART 1: Creator GPM Comparison (Bar Chart)
+// ============================================================
+(function() {
+  const chart = echarts.init(document.getElementById('chart-creator-gpm'));
+  const creators = DATA.creatorGPM;
+  const sorted = [...creators].sort((a, b) => b.gpm - a.gpm);
+
+  chart.setOption({
+    ...darkTheme,
+    grid: { left: 60, right: 30, top: 20, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: sorted.map(d => d.name),
+      axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+      axisLabel: { color: '#aaa', fontSize: 12, fontWeight: 500 },
+      axisTick: { show: false }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'GPM',
+      nameTextStyle: { color: '#888', fontSize: 12 },
+      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed' } },
+      axisLabel: { color: '#888' }
+    },
+    tooltip: {
+      ...darkTheme.tooltip,
+      formatter: function(params) {
+        const d = sorted[params.dataIndex];
+        return `<strong>${d.name}</strong><br/>
+          GPM：<strong style="color:#ff2442">${d.gpm.toFixed(2)}</strong><br/>
+          GMV：¥${d.gmv.toLocaleString()}<br/>
+          有GMV笔记：${d.count}篇<br/>
+          曝光量：${d.exposure.toLocaleString()}`;
+      }
+    },
+    series: [{
+      type: 'bar',
+      data: sorted.map(d => ({
+        value: d.gpm,
+        itemStyle: {
+          color: d.gpm >= 80
+            ? new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#ff2442' }, { offset: 1, color: '#ff6b81' }])
+            : new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#5B8FF9' }, { offset: 1, color: '#6DC8EC' }]),
+          borderRadius: [6, 6, 0, 0]
+        }
+      })),
+      barWidth: '50%',
+      label: {
+        show: true,
+        position: 'top',
+        formatter: '{c}',
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 700
+      },
+      animationDuration: 1000,
+      animationEasing: 'elasticOut'
+    }]
+  });
+
+  window.addEventListener('resize', () => chart.resize());
+})();
+
+// ============================================================
+// CHART 2: GPM Distribution (Pie Chart)
+// ============================================================
+(function() {
+  const chart = echarts.init(document.getElementById('chart-gpm-dist'));
+
+  chart.setOption({
+    ...darkTheme,
+    tooltip: {
+      ...darkTheme.tooltip,
+      formatter: function(params) {
+        const total = DATA.gpmDist.reduce((s, d) => s + d.value, 0);
+        return `<strong>${params.name}</strong><br/>
+          笔记数：<strong style="color:#ff2442">${params.value}</strong> 篇<br/>
+          占比：${(params.percent).toFixed(1)}%`;
+      }
+    },
+    legend: {
+      orient: 'vertical',
+      right: 20,
+      top: 'center',
+      textStyle: { color: '#aaa', fontSize: 12 },
+      itemWidth: 12,
+      itemHeight: 12,
+      itemGap: 10
+    },
+    series: [{
+      type: 'pie',
+      radius: ['40%', '72%'],
+      center: ['35%', '50%'],
+      avoidLabelOverlap: true,
+      padAngle: 2,
+      itemStyle: {
+        borderRadius: 6,
+        borderColor: '#0e1117',
+        borderWidth: 2
+      },
+      label: {
+        show: true,
+        formatter: '{b}\n{d}%',
+        color: '#ccc',
+        fontSize: 11,
+        lineHeight: 16
+      },
+      labelLine: {
+        lineStyle: { color: 'rgba(255,255,255,0.15)' }
+      },
+      emphasis: {
+        label: { fontSize: 14, fontWeight: 'bold' },
+        itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(255,36,66,0.3)' }
+      },
+      data: DATA.gpmDist.map(d => ({
+        name: d.name,
+        value: d.value,
+        itemStyle: { color: d.color }
+      })),
+      animationDuration: 1200,
+      animationEasing: 'cubicOut'
+    }]
+  });
+
+  window.addEventListener('resize', () => chart.resize());
+})();
+
+// ============================================================
+// CHART 3: 4 Creators GMV Contribution (Pie + Bar combo)
+// ============================================================
+(function() {
+  const chart = echarts.init(document.getElementById('chart-gmv-contrib'));
+  const creators = DATA.creatorGPM;
+  const totalGMV = creators.reduce((s, d) => s + d.gmv, 0);
+
+  chart.setOption({
+    ...darkTheme,
+    tooltip: {
+      ...darkTheme.tooltip,
+      formatter: function(params) {
+        const d = creators.find(c => c.name === params.name);
+        if (!d) return '';
+        const pct = (d.gmv / totalGMV * 100).toFixed(1);
+        return `<strong>${d.name}</strong><br/>
+          GMV：<strong style="color:#ff6b81">¥${d.gmv.toLocaleString()}</strong><br/>
+          占比：${pct}%<br/>
+          有GMV笔记：${d.count}篇`;
+      }
+    },
+    legend: {
+      bottom: 0,
+      textStyle: { color: '#999', fontSize: 12 },
+      itemWidth: 14,
+      itemHeight: 14
+    },
+    series: [
+      {
+        name: 'GMV贡献',
+        type: 'pie',
+        radius: ['45%', '75%'],
+        center: ['50%', '45%'],
+        avoidLabelOverlap: true,
+        padAngle: 3,
+        itemStyle: {
+          borderRadius: 8,
+          borderColor: '#0e1117',
+          borderWidth: 3
+        },
+        label: {
+          show: true,
+          formatter: function(params) {
+            return `{name|${params.name}}\n{value|¥${(params.value).toLocaleString()}}`;
+          },
+          rich: {
+            name: { color: '#ccc', fontSize: 12, fontWeight: 600, lineHeight: 20 },
+            value: { color: '#ff6b81', fontSize: 14, fontWeight: 700 }
+          }
+        },
+        labelLine: {
+          length: 15,
+          length2: 15,
+          lineStyle: { color: 'rgba(255,255,255,0.12)' }
+        },
+        emphasis: {
+          itemStyle: { shadowBlur: 15, shadowOffsetX: 0, shadowColor: 'rgba(255,36,66,0.4)' }
+        },
+        data: creators.map((d, i) => ({
+          name: d.name,
+          value: d.gmv,
+          itemStyle: {
+            color: [
+              new echarts.graphic.LinearGradient(0, 0, 1, 1, [{ offset: 0, color: '#ff2442' }, { offset: 1, color: '#ff6b81' }]),
+              new echarts.graphic.LinearGradient(0, 0, 1, 1, [{ offset: 0, color: '#5B8FF9' }, { offset: 1, color: '#6DC8EC' }]),
+              new echarts.graphic.LinearGradient(0, 0, 1, 1, [{ offset: 0, color: '#5AD8A6' }, { offset: 1, color: '#1E9493' }]),
+              new echarts.graphic.LinearGradient(0, 0, 1, 1, [{ offset: 0, color: '#F6BD16' }, { offset: 1, color: '#FF9845' }])
+            ][i]
+          }
+        })),
+        animationDuration: 1200,
+        animationEasing: 'cubicOut'
+      }
+    ]
+  });
+
+  window.addEventListener('resize', () => chart.resize());
+})();
+
+// ============================================================
+// TABLE: Top 20 Notes
+// ============================================================
+(function() {
+  const tbody = document.getElementById('top20-body');
+  const sortBtns = document.querySelectorAll('.sort-btn');
+  let currentSort = 'gpm-desc';
+
+  function renderTable(data) {
+    tbody.innerHTML = data.map((d, i) => `
+      <tr>
+        <td class="rank-col">${i + 1}</td>
+        <td class="id-col" title="${d.id}">${d.id}</td>
+        <td class="creator-col">${d.creator}</td>
+        <td class="gmv-col">¥${d.gmv.toFixed(d.gmv % 1 === 0 ? 0 : 1)}</td>
+        <td class="exposure-col">${d.exposure.toLocaleString()}</td>
+        <td class="gpm-col">${d.gpm.toFixed(2)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function sortData(data, sortKey) {
+    const arr = [...data];
+    switch (sortKey) {
+      case 'gpm-desc': arr.sort((a, b) => b.gpm - a.gpm); break;
+      case 'gpm-asc': arr.sort((a, b) => a.gpm - b.gpm); break;
+      case 'gmv-desc': arr.sort((a, b) => b.gmv - a.gmv); break;
+    }
+    return arr;
+  }
+
+  function updateSort(btn, sortKey) {
+    sortBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSort = sortKey;
+    const sorted = sortData(DATA.top20, sortKey);
+    renderTable(sorted);
+  }
+
+  sortBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      updateSort(this, this.dataset.sort);
+    });
+  });
+
+  // Initial render
+  renderTable(DATA.top20);
+})();
+</script>
+</body>
+</html>

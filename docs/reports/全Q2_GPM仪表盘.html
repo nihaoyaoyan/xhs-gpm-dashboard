@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全Q2 GPM仪表盘 · 小红书</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0e1117;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  padding: 20px;
+  min-height: 100vh;
+}
+.dashboard {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0 24px 0;
+  border-bottom: 1px solid #1e2430;
+  margin-bottom: 24px;
+}
+.header h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+.header h1 span { color: #ff2442; }
+.header .subtitle {
+  color: #888;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+/* KPI Cards */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.kpi-card {
+  background: linear-gradient(135deg, #141822 0%, #1a1f2e 100%);
+  border: 1px solid #1e2430;
+  border-radius: 14px;
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 36, 66, 0.08);
+}
+.kpi-card .label {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.kpi-card .value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+}
+.kpi-card .value .unit {
+  font-size: 14px;
+  color: #888;
+  font-weight: 400;
+}
+.kpi-card .badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  margin-top: 6px;
+  font-weight: 600;
+}
+.badge-red { background: rgba(255, 36, 66, 0.18); color: #ff2442; }
+.badge-green { background: rgba(0, 200, 117, 0.15); color: #00c875; }
+.badge-blue { background: rgba(91, 143, 249, 0.15); color: #5B8FF9; }
+.badge-orange { background: rgba(246, 189, 22, 0.18); color: #F6BD16; }
+/* Chart containers */
+.chart-section { margin-bottom: 20px; }
+.chart-full {
+  background: #141822;
+  border: 1px solid #1e2430;
+  border-radius: 14px;
+  padding: 16px;
+}
+.chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.chart-half {
+  background: #141822;
+  border: 1px solid #1e2430;
+  border-radius: 14px;
+  padding: 16px;
+}
+.chart-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ccc;
+  margin-bottom: 10px;
+  padding-left: 4px;
+  border-left: 3px solid #ff2442;
+  padding-left: 10px;
+}
+.chart-box { width: 100%; height: 380px; }
+.chart-full .chart-box { height: 420px; }
+/* Summary cards */
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 20px;
+}
+.summary-card {
+  background: #141822;
+  border: 1px solid #1e2430;
+  border-radius: 14px;
+  padding: 16px;
+}
+.summary-card h3 {
+  font-size: 14px;
+  color: #ff2442;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.summary-card p {
+  font-size: 13px;
+  color: #aaa;
+  line-height: 1.7;
+}
+/* Responsive */
+@media (max-width: 900px) {
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .chart-row { grid-template-columns: 1fr; }
+  .summary-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .summary-row { grid-template-columns: 1fr; }
+  .header { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
+</style>
+</head>
+<body>
+<div class="dashboard">
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>📊 <span>全Q2</span> GPM 运营仪表盘</h1>
+      <div style="color:#666;font-size:13px;margin-top:4px;">小红书 · 2026年Q2（3月 → 4月 → 5月 → 6月 → 本周）</div>
+    </div>
+    <div class="subtitle">数据更新至 本周</div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="label">📈 峰值 GPM</div>
+      <div class="value">54.10 <span class="unit">(4月)</span></div>
+      <span class="badge badge-red">Q2 峰值月</span>
+    </div>
+    <div class="kpi-card">
+      <div class="label">📊 整体趋势</div>
+      <div class="value">震荡<span class="unit">上行</span></div>
+      <span class="badge badge-green">本周飙升 +281%</span>
+    </div>
+    <div class="kpi-card">
+      <div class="label">💰 GMV 峰值</div>
+      <div class="value">¥89,390 <span class="unit">(4月)</span></div>
+      <span class="badge badge-blue">Q2 最高月</span>
+    </div>
+    <div class="kpi-card">
+      <div class="label">🚀 成长最快创作者</div>
+      <div class="value" style="font-size:24px;">小柚练后吃什么</div>
+      <span class="badge badge-orange">GPM +412%</span>
+    </div>
+    <div class="kpi-card">
+      <div class="label">📝 累计匹配笔记</div>
+      <div class="value">6,756 <span class="unit">篇</span></div>
+      <span class="badge badge-blue">3月~本周累计</span>
+    </div>
+  </div>
+
+  <!-- CHART 1: Core 5-period trend (Full width) -->
+  <div class="chart-section chart-full">
+    <div class="chart-title">⭐ 核心五期趋势 · GPM · GMV · 曝光量</div>
+    <div id="chart1" class="chart-box"></div>
+  </div>
+
+  <!-- ROW 2: Creator GPM bars + Notes with GMV trend -->
+  <div class="chart-section chart-row">
+    <div class="chart-half">
+      <div class="chart-title">创作者五期 GPM 分组柱状图</div>
+      <div id="chart2" class="chart-box" style="height:360px;"></div>
+    </div>
+    <div class="chart-half">
+      <div class="chart-title">有GMV笔记数 · 趋势 & 占比</div>
+      <div id="chart3" class="chart-box" style="height:360px;"></div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Image vs Video GPM + GPM distribution -->
+  <div class="chart-section chart-row">
+    <div class="chart-half">
+      <div class="chart-title">图文 vs 视频 · 五期 GPM 对比</div>
+      <div id="chart4" class="chart-box" style="height:360px;"></div>
+    </div>
+    <div class="chart-half">
+      <div class="chart-title">各期 GPM 分布堆叠图</div>
+      <div id="chart5" class="chart-box" style="height:360px;"></div>
+    </div>
+  </div>
+
+  <!-- ROW 4: Creator GMV stacked area (Full width) -->
+  <div class="chart-section chart-full">
+    <div class="chart-title">各创作者 GMV 贡献趋势 · 堆叠面积图</div>
+    <div id="chart6" class="chart-box"></div>
+  </div>
+
+  <!-- BOTTOM: Summary cards -->
+  <div class="summary-row">
+    <div class="summary-card">
+      <h3>🔴 整体 GPM 趋势</h3>
+      <p>Q2 GPM 呈现"爬升→回落→飙升"走势。3月起步 37.19，4月冲至 54.10（+45.5%）达Q2峰值，5-6月回落至38.85和34.62。本周异常飙升至 131.93（环比+281%），需关注数据是否完整。</p>
+    </div>
+    <div class="summary-card">
+      <h3>🟡 GMV 与曝光量</h3>
+      <p>GMV峰值在4月（¥89,390）和5月（¥79,650），6月起显著下降。曝光量5月最高（205万），本周仅9万。GMV下降主因曝光腰斩，但GPM飙升说明高转化笔记占比提升。</p>
+    </div>
+    <div class="summary-card">
+      <h3>🟢 创作者表现</h3>
+      <p>鲜水湾各期GPM均领先，4月达83.83，本周196.07。小柚练后吃什么成长最快，GPM从3月22.44升至本周114.98（+412%）。菲菲上班吃什么本周以181.63紧追，表现亮眼。</p>
+    </div>
+    <div class="summary-card">
+      <h3>🔵 内容策略洞察</h3>
+      <p>图文笔记始终是GMV主力，视频GPM在5月曾达77.55但6月后骤降。本周视频GMV为0，需加强视频内容带货。有GMV笔记占比从22.3%降至3.9%，转化笔记减少但单篇效率提升。</p>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:20px 0 10px;color:#444;font-size:12px;letter-spacing:1px;">
+    达仕 · 智数分析专家团 · 可视化分析设计师 &copy; 2026
+  </div>
+</div>
+
+<script>
+// ===== Color Palette =====
+const colors = {
+  red: '#ff2442',
+  redLight: 'rgba(255,36,66,0.15)',
+  blue: '#5B8FF9',
+  blueLight: 'rgba(91,143,249,0.15)',
+  green: '#5AD8A6',
+  orange: '#F6BD16',
+  purple: '#945FB9',
+  cyan: '#6DC8EC',
+  coral: '#E86452',
+  teal: '#1E9493',
+  gray: '#555',
+  gridLine: '#1e2430',
+  text: '#888',
+};
+
+const creatorColors = ['#ff2442', '#5B8FF9', '#F6BD16', '#5AD8A6'];
+const creatorNames = ['鲜水湾', '菲菲上班吃什么', '婉婉上班吃什么', '小柚练后吃什么'];
+
+// ===== DATA =====
+const periods = ['3月', '4月', '5月', '6月', '本周'];
+const notes = [641, 990, 1477, 1805, 1843];
+const notesWithGMV = [143, 206, 239, 172, 72];
+const gmv = [22259, 89390, 79650, 43438, 11997];
+const exposure = [598488, 1652414, 2050217, 1254571, 90932];
+const gpm = [37.19, 54.10, 38.85, 34.62, 131.93];
+const videoGPM = [9.77, 56.88, 77.55, 19.25, 0.00];
+const imageGPM = [38.51, 54.09, 38.70, 34.71, 133.20];
+
+// Creator GPM
+const creatorGPM = [
+  [36.40, 83.83, 59.65, 56.81, 196.07],  // 鲜水湾
+  [31.98, 40.06, 31.22, 23.25, 181.63],  // 菲菲
+  [42.89, 41.93, 36.61, 38.27, 49.44],   // 婉婉
+  [22.44, 43.91, 42.28, 32.45, 114.98],  // 小柚
+];
+
+// Creator GMV
+const creatorGMV = [
+  [10390, 41589, 25824, 16307, 4187],   // 鲜水湾
+  [3087, 20470, 38487, 13804, 4674],    // 菲菲
+  [8228, 21225, 5979, 7861, 1437],      // 婉婉
+  [554, 6107, 9360, 5466, 1699],        // 小柚
+];
+
+// GPM Distribution
+const gpmDistNoGMV = [498, 784, 1238, 1633, 1771];
+const gpmDist0_100 = [104, 139, 149, 114, 72];
+const gpmDist100_500 = [37, 56, 75, 48, 0];
+const gpmDist500 = [2, 11, 15, 10, 0];
+
+// GPM changes for annotations
+const gpmChanges = ['', '+45.5%', '-28.2%', '-10.9%', '+281.1%'];
+
+// ===== CHART 1: Core 5-period Trend =====
+const chart1 = echarts.init(document.getElementById('chart1'));
+chart1.setOption({
+  backgroundColor: 'transparent',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: '#1a1f2e',
+    borderColor: '#2a3040',
+    textStyle: { color: '#e0e0e0', fontSize: 13 },
+    axisPointer: { type: 'cross', crossStyle: { color: '#555' } }
+  },
+  legend: {
+    data: ['整体GPM', 'GMV', '曝光量'],
+    textStyle: { color: '#aaa', fontSize: 12 },
+    top: 0,
+    icon: 'circle',
+    itemWidth: 8,
+    itemHeight: 8,
+  },
+  grid: { left: 60, right: 60, bottom: 40, top: 40 },
+  xAxis: {
+    type: 'category',
+    data: periods,
+    axisLine: { lineStyle: { color: '#333' } },
+    axisLabel: { color: '#888', fontSize: 13, fontWeight: 'bold' },
+    axisTick: { alignWithLabel: true },
+  },
+  yAxis: [
+    {
+      type: 'value',
+      name: 'GPM',
+      nameTextStyle: { color: '#888', fontSize: 11 },
+      axisLabel: { color: '#888', formatter: '{value}' },
+      splitLine: { lineStyle: { color: '#1e2430', type: 'dashed' } },
+    },
+    {
+      type: 'value',
+      name: 'GMV / 曝光量',
+      nameTextStyle: { color: '#888', fontSize: 11 },
+      axisLabel: { color: '#888', formatter: (v) => v >= 10000 ? (v/10000).toFixed(0)+'万' : v },
+      splitLine: { show: false },
+    }
+  ],
+  series: [
+    {
+      name: '整体GPM',
+      type: 'line',
+      yAxisIndex: 0,
+      data: gpm.map((v, i) => ({
+        value: v,
+        symbol: i === 1 || i === 4 ? 'circle' : 'circle',
+        symbolSize: i === 1 || i === 4 ? 14 : 8,
+        itemStyle: i === 1 || i === 4 ? { color: '#ff2442', borderColor: '#fff', borderWidth: 2 } : { color: '#ff2442' },
+      })),
+      lineStyle: { color: '#ff2442', width: 3 },
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(255,36,66,0.25)' },
+            { offset: 1, color: 'rgba(255,36,66,0.02)' },
+          ]
+        }
+      },
+      markPoint: {
+        data: [
+          { coord: ['4月', 54.10], value: '54.10\nQ2峰值', itemStyle: { color: '#ff2442' }, symbol: 'pin', symbolSize: 50, label: { color: '#fff', fontSize: 10, formatter: (p) => '峰值 ' + p.value } },
+          { coord: ['本周', 131.93], value: '131.93\n异常飙升', itemStyle: { color: '#F6BD16' }, symbol: 'pin', symbolSize: 50, label: { color: '#fff', fontSize: 10, formatter: (p) => '飙升 ' + p.value } },
+        ]
+      },
+      markLine: {
+        silent: true,
+        data: gpm.map((v, i) => ({
+          xAxis: i,
+          label: {
+            formatter: gpmChanges[i],
+            color: gpmChanges[i].includes('+') ? '#ff2442' : '#5AD8A6',
+            fontSize: 11,
+            fontWeight: 'bold',
+            position: 'insideEndTop',
+          },
+          lineStyle: { type: 'dashed', color: 'rgba(255,36,66,0.2)', width: 0 },
+          symbol: 'none',
+        })),
+      },
+      label: {
+        show: true,
+        position: 'top',
+        color: '#ff2442',
+        fontWeight: 'bold',
+        fontSize: 13,
+        formatter: (p) => p.value.toFixed(1),
+      },
+    },
+    {
+      name: 'GMV',
+      type: 'bar',
+      yAxisIndex: 1,
+      data: gmv,
+      barWidth: 28,
+      itemStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: '#5B8FF9' },
+            { offset: 1, color: 'rgba(91,143,249,0.3)' },
+          ]
+        },
+        borderRadius: [4, 4, 0, 0],
+      },
+      label: {
+        show: true,
+        position: 'top',
+        color: '#5B8FF9',
+        fontSize: 11,
+        formatter: (p) => '¥' + (p.value/1000).toFixed(0) + 'k',
+      },
+    },
+    {
+      name: '曝光量',
+      type: 'line',
+      yAxisIndex: 1,
+      data: exposure,
+      lineStyle: { color: '#888', width: 2, type: 'dashed' },
+      symbol: 'diamond',
+      symbolSize: 10,
+      itemStyle: { color: '#888' },
+      label: {
+        show: true,
+        position: 'bottom',
+        color: '#888',
+        fontSize: 10,
+        formatter: (p) => (p.value/10000).toFixed(0) + '万',
+      },
+    },
+  ],
+});
+
+// ===== CHART 2: Creator GPM Grouped Bar =====
+const chart2 = echarts.init(document.getElementById('chart2'));
+chart2.setOption({
+  backgroundColor: 'transparent',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: '#1a1f2e',
+    borderColor: '#2a3040',
+    textStyle: { color: '#e0e0e0', fontSize: 12 },
+    formatter: (params) => {
+      let s = `<b>${params[0].axisValue}</b><br/>`;
+      params.forEach(p => { s += `${p.marker} ${p.seriesName}: <b>${p.value.toFixed(1)}</b><br/>`; });
+      return s;
+    }
+  },
+  legend: {
+    data: creatorNames,
+    textStyle: { color: '#aaa', fontSize: 11 },
+    top: 0,
+    icon: 'roundRect',
+    itemWidth: 12,
+    itemHeight: 8,
+  },
+  grid: { left: 50, right: 20, bottom: 30, top: 40 },
+  xAxis: {
+    type: 'category',
+    data: periods,
+    axisLine: { lineStyle: { color: '#333' } },
+    axisLabel: { color: '#888', fontSize: 12 },
+  },
+  yAxis: {
+    type: 'value',
+    name: 'GPM',
+    nameTextStyle: { color: '#888', fontSize: 11 },
+    axisLabel: { color: '#888' },
+    splitLine: { lineStyle: { color: '#1e2430', type: 'dashed' } },
+  },
+  series: creatorNames.map((name, idx) => ({
+    name: name,
+    type: 'bar',
+    data: creatorGPM[idx],
+    barWidth: 14,
+    itemStyle: {
+      color: creatorColors[idx],
+      borderRadius: [3, 3, 0, 0],
+    },
+    label: {
+      show: true,
+      position: 'top',
+      color: creatorColors[idx],
+      fontSize: 9,
+      formatter: (p) => p.value.toFixed(0),
+    },
+  })),
+});
+
+// ===== CHART 3: Notes with GMV Trend =====
+const chart3 = echarts.init(document.getElementById('chart3'));
+const notesRatio = notesWithGMV.map((v, i) => +(v / notes[i] * 100).toFixed(1));
+chart3.setOption({
+  backgroundColor: 'transparent',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: '#1a1f2e',
+    borderColor: '#2a3040',
+    textStyle: { color: '#e0e0e0', fontSize: 12 },
+    axisPointer: { type: 'cross' },
+  },
+  legend: {
+    data: ['有GMV笔记数', '有GMV笔记占比'],
+    textStyle: { color: '#aaa', fontSize: 11 },
+    top: 0,
+    icon: 'circle',
+    itemWidth: 8,
+    itemHeight: 8,
+  },
+  grid: { left: 50, right: 50, bottom: 30, top: 40 },
+  xAxis: {
+    type: 'category',
+    data: periods,
+    axisLine: { lineStyle: { color: '#333' } },
+    axisLabel: { color: '#888', fontSize: 12 },
+  },
+  yAxis: [
+    {
+      type: 'value',
+      name: '笔记数',
+      nameTextStyle: { color: '#888', fontSize: 11 },
+      axisLabel: { color: '#888' },
+      splitLine: { lineStyle: { color: '#1e2430', type: 'dashed' } },
+    },
+    {
+      type: 'value',
+      name: '占比 %',
+      nameTextStyle: { color: '#888', fontSize: 11 },
+      axisLabel: { color: '#888', formatter: '{value}%' },
+      splitLine: { show: false },
+      max: 30,
+    }
+  ],
+  series: [
+    {
+      name: '有GMV笔记数',
+      type: 'bar',
+      data: notesWithGMV,
+      barWidth: 24,
+      itemStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: '#F6BD16' },
+            { offset: 1, color: 'rgba(246,189,22,0.2)' },
+          ]
+        },
+        borderRadius: [4, 4, 0, 0],
+      },
+      label: {
+        show: true,
+        position: 'top',
+        color: '#F6BD16',
+        fontSize: 11,
+        formatter: (p) => p.value,
+      },
+    },
+    {
+      name: '有GMV笔记占比',
+      type: 'line',
+      yAxisIndex: 1,
+      data: notesRatio,
+      lineStyle: { color: '#5AD8A6', width: 3 },
+      itemStyle: { color: '#5AD8A6' },
+      symbol: 'circle',
+      symbolSize: 10,
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(90,216,166,0.2)' },
+            { offset: 1, color: 'rgba(90,216,166,0.02)' },
+          ]
+        }
+      },
+      label: {
+        show: true,
+        position: 'bottom',
+        color: '#5AD8A6',
+        fontSize: 11,
+        fontWeight: 'bold',
+        formatter: (p) => p.value + '%',
+      },
+    },
+  ],
+});
+
+// ===== CHART 4: Image vs Video GPM =====
+const chart4 = echarts.init(document.getElementById('chart4'));
+chart4.setOption({
+  backgroundColor: 'transparent',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: '#1a1f2e',
+    borderColor: '#2a3040',
+    textStyle: { color: '#e0e0e0', fontSize: 12 },
+  },
+  legend: {
+    data: ['图文笔记 GPM', '视频笔记 GPM'],
+    textStyle: { color: '#aaa', fontSize: 11 },
+    top: 0,
+    icon: 'circle',
+    itemWidth: 8,
+    itemHeight: 8,
+  },
+  grid: { left: 50, right: 20, bottom: 30, top: 40 },
+  xAxis: {
+    type: 'category',
+    data: periods,
+    axisLine: { lineStyle: { color: '#333' } },
+    axisLabel: { color: '#888', fontSize: 12 },
+  },
+  yAxis: {
+    type: 'value',
+    name: 'GPM',
+    nameTextStyle: { color: '#888', fontSize: 11 },
+    axisLabel: { color: '#888' },
+    splitLine: { lineStyle: { color: '#1e2430', type: 'dashed' } },
+  },
+  series: [
+    {
+      name: '图文笔记 GPM',
+      type: 'line',
+      data: imageGPM,
+      lineStyle: { color: '#5B8FF9', width: 3 },
+      itemStyle: { color: '#5B8FF9' },
+      symbol: 'circle',
+      symbolSize: 10,
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(91,143,249,0.15)' },
+            { offset: 1, color: 'rgba(91,143,249,0.01)' },
+          ]
+        }
+      },
+      label: {
+        show: true,
+        position: 'top',
+        color: '#5B8FF9',
+        fontSize: 11,
+        fontWeight: 'bold',
+        formatter: (p) => p.value.toFixed(1),
+      },
+    },
+    {
+      name: '视频笔记 GPM',
+      type: 'line',
+      data: videoGPM,
+      lineStyle: { color: '#F6BD16', width: 3, type: 'dashed' },
+      itemStyle: { color: '#F6BD16' },
+      symbol: 'diamond',
+      symbolSize: 12,
+      label: {
+        show: true,
+        position: 'bottom',
+        color: '#F6BD16',
+        fontSize: 11,
+        fontWeight: 'bold',
+        formatter: (p) => p.value.toFixed(1),
+      },
+    },
+  ],
+});
+
+// ===== CHART 5: GPM Distribution Stacked =====
+const chart5 = echarts.init(document.getElementById('chart5'));
+chart5.setOption({
+  backgroundColor: 'transparent',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: '#1a1f2e',
+    borderColor: '#2a3040',
+    textStyle: { color: '#e0e0e0', fontSize: 12 },
+    formatter: (params) => {
+      let s = `<b>${params[0].axisValue}</b><br/>`;
+      let total = 0;
+      params.forEach(p => { total += p.value; });
+      params.forEach(p => {
+        const pct = (p.value / total * 100).toFixed(1);
+        s += `${p.marker} ${p.seriesName}: <b>${p.value}</b> (${pct}%)<br/>`;
+      });
+      return s;
+    }
+  },
+  legend: {
+    data: ['无GMV', 'GPM 0-100', 'GPM 100-500', 'GPM 500+'],
+    textStyle: { color: '#aaa', fontSize: 11 },
+    top: 0,
+    icon: 'roundRect',
+    itemWidth: 12,
+    itemHeight: 8,
+  },
+  grid: { left: 50, right: 20, bottom: 30, top: 40 },
+  xAxis: {
+    type: 'category',
+    data: periods,
+    axisLine: { lineStyle: { color: '#333' } },
+    axisLabel: { color: '#888', fontSize: 12 },
+  },
+  yAxis: {
+    type: 'value',
+    name: '笔记数',
+    nameTextStyle: { color: '#888', fontSize: 11 },
+    axisLabel: { color: '#888' },
+    splitLine: { lineStyle: { color: '#1e2430', type: 'dashed' } },
+  },
+  series: [
+    {
+      name: '无GMV',
+      type: 'bar',
+      stack: 'total',
+      data: gpmDistNoGMV,
+      itemStyle: { color: '#2a3040' },
+      label: {
+        show: false,
+      },
+    },
+    {
+      name: 'GPM 0-100',
+      type: 'bar',
+      stack: 'total',
+      data: gpmDist0_100,
+      itemStyle: { color: '#5B8FF9' },
+    },
+    {
+      name: 'GPM 100-500',
+      type: 'bar',
+      stack: 'total',
+      data: gpmDist100_500,
+      itemStyle: { color: '#F6BD16' },
+    },
+    {
+      name: 'GPM 500+',
+      type: 'bar',
+      stack: 'total',
+      data: gpmDist500,
+      itemStyle: { color: '#ff2442' },
+    },
+  ],
+});
+
+// ===== CHART 6: Creator GMV Stacked Area =====
+const chart6 = echarts.init(document.getElementById('chart6'));
+chart6.setOption({
+  backgroundColor: 'transparent',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: '#1a1f2e',
+    borderColor: '#2a3040',
+    textStyle: { color: '#e0e0e0', fontSize: 12 },
+    formatter: (params) => {
+      let s = `<b>${params[0].axisValue}</b><br/>`;
+      let total = 0;
+      params.forEach(p => { total += p.value; });
+      params.forEach(p => {
+        const pct = total > 0 ? (p.value / total * 100).toFixed(1) : '0.0';
+        s += `${p.marker} ${p.seriesName}: <b>¥${p.value.toLocaleString()}</b> (${pct}%)<br/>`;
+      });
+      s += `<hr style="border-color:#333;margin:4px 0"/>`;
+      s += `合计: <b>¥${total.toLocaleString()}</b>`;
+      return s;
+    }
+  },
+  legend: {
+    data: creatorNames,
+    textStyle: { color: '#aaa', fontSize: 11 },
+    top: 0,
+    icon: 'circle',
+    itemWidth: 8,
+    itemHeight: 8,
+  },
+  grid: { left: 60, right: 30, bottom: 35, top: 40 },
+  xAxis: {
+    type: 'category',
+    data: periods,
+    axisLine: { lineStyle: { color: '#333' } },
+    axisLabel: { color: '#888', fontSize: 12 },
+    boundaryGap: false,
+  },
+  yAxis: {
+    type: 'value',
+    name: 'GMV (¥)',
+    nameTextStyle: { color: '#888', fontSize: 11 },
+    axisLabel: { color: '#888', formatter: (v) => v >= 10000 ? (v/10000).toFixed(0)+'万' : v },
+    splitLine: { lineStyle: { color: '#1e2430', type: 'dashed' } },
+  },
+  series: creatorNames.map((name, idx) => ({
+    name: name,
+    type: 'line',
+    stack: 'GMV',
+    areaStyle: {
+      color: creatorColors[idx] + '80',
+    },
+    emphasis: {
+      focus: 'series',
+      lineStyle: { width: 3 },
+    },
+    data: creatorGMV[idx].map(v => Math.round(v)),
+    lineStyle: { color: creatorColors[idx], width: 2 },
+    itemStyle: { color: creatorColors[idx] },
+    symbol: 'circle',
+    symbolSize: 8,
+    label: {
+      show: true,
+      position: 'top',
+      color: creatorColors[idx],
+      fontSize: 10,
+      formatter: (p) => '¥' + (p.value/1000).toFixed(0) + 'k',
+    },
+  })),
+});
+
+// ===== Responsive =====
+window.addEventListener('resize', () => {
+  chart1.resize();
+  chart2.resize();
+  chart3.resize();
+  chart4.resize();
+  chart5.resize();
+  chart6.resize();
+});
+</script>
+</body>
+</html>

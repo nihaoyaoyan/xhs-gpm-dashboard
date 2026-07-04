@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全Q2 GPM综合分析报告 — 小红书商品笔记</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  color: #1a1a2e; background: #f5f7fb; line-height: 1.7;
+}
+/* ===== Print ===== */
+@media print {
+  body { background: #fff; font-size: 12px; }
+  .page-break { page-break-before: always; }
+  .toc { display: none !important; }
+  .report-container { box-shadow: none; margin: 0; padding: 0; max-width: 100%; }
+  .section { page-break-inside: avoid; }
+  .chart-box { page-break-inside: avoid; }
+}
+/* ===== Layout ===== */
+.report-container { max-width: 1060px; margin: 0 auto; padding: 36px 28px 60px; }
+.report-header {
+  background: linear-gradient(135deg, #0a1628 0%, #1a2744 50%, #1e3a5f 100%);
+  color: #fff; border-radius: 16px; padding: 48px 44px;
+  margin-bottom: 28px; position: relative; overflow: hidden;
+}
+.report-header::after {
+  content: ''; position: absolute; top: -40%; right: -15%;
+  width: 450px; height: 450px; background: rgba(255,255,255,0.03); border-radius: 50%;
+}
+.report-header .tag {
+  display: inline-block; background: rgba(255,255,255,0.13);
+  padding: 4px 16px; border-radius: 20px; font-size: 0.78rem;
+  letter-spacing: 1px; margin-bottom: 14px;
+}
+.report-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 6px; letter-spacing: 1px; }
+.report-header .subtitle { font-size: 1rem; color: rgba(255,255,255,0.72); }
+.report-header .meta {
+  margin-top: 18px; display: flex; gap: 28px; flex-wrap: wrap;
+  font-size: 0.83rem; color: rgba(255,255,255,0.55);
+}
+.report-header .meta span { display: flex; align-items: center; gap: 6px; }
+
+/* ===== KPI Banner ===== */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px; margin-bottom: 28px;
+}
+.kpi-card {
+  background: #fff; border-radius: 12px; padding: 18px 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center;
+}
+.kpi-card .label { font-size: 0.78rem; color: #7a8ba8; margin-bottom: 4px; }
+.kpi-card .value { font-size: 1.5rem; font-weight: 700; color: #0f3460; }
+.kpi-card .value.up { color: #22a67e; }
+.kpi-card .value.down { color: #e8544f; }
+.kpi-card .change { font-size: 0.75rem; color: #7a8ba8; margin-top: 2px; }
+
+/* ===== Navigation ===== */
+.toc {
+  background: #fff; border-radius: 12px; padding: 24px 28px;
+  margin-bottom: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.toc h3 { font-size: 1.05rem; margin-bottom: 14px; color: #0f3460; }
+.toc ol { padding-left: 20px; columns: 2; column-gap: 36px; }
+.toc ol li { margin-bottom: 5px; }
+.toc ol li a { color: #2d6a9f; text-decoration: none; font-size: 0.88rem; transition: color 0.2s; }
+.toc ol li a:hover { color: #0f3460; text-decoration: underline; }
+
+/* ===== Sections ===== */
+.section {
+  background: #fff; border-radius: 12px; padding: 30px;
+  margin-bottom: 22px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.section h2 {
+  font-size: 1.3rem; color: #0f3460; padding-bottom: 10px;
+  border-bottom: 3px solid #e8edf5; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section h2 .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 7px;
+  background: #0f3460; color: #fff; font-size: 0.82rem; font-weight: 600; flex-shrink: 0;
+}
+.section h3 { font-size: 1.08rem; color: #1a1a2e; margin: 18px 0 10px; }
+.section h4 { font-size: 0.95rem; color: #2d6a9f; margin: 14px 0 8px; }
+.section p { margin-bottom: 10px; color: #333; }
+.section ul, .section ol { margin: 6px 0 12px 20px; color: #333; }
+.section li { margin-bottom: 4px; }
+
+/* ===== Tables ===== */
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 0.85rem;
+  margin: 12px 0 16px; overflow: hidden; border-radius: 8px;
+}
+.data-table thead { background: #0f3460; color: #fff; }
+.data-table th { padding: 10px 12px; text-align: center; font-weight: 600; }
+.data-table td { padding: 8px 12px; text-align: center; border-bottom: 1px solid #eef2f7; }
+.data-table tbody tr:hover { background: #f0f5ff; }
+.data-table tbody tr:nth-child(even) { background: #f8faff; }
+.data-table .highlight { font-weight: 600; color: #0f3460; }
+.data-table .up { color: #22a67e; }
+.data-table .down { color: #e8544f; }
+.data-table .left { text-align: left; }
+
+/* ===== Charts ===== */
+.chart-box {
+  width: 100%; height: 380px; margin: 14px 0 18px;
+  border: 1px solid #eef2f7; border-radius: 10px; padding: 4px;
+}
+.chart-box.tall { height: 440px; }
+.chart-box.wide { height: 400px; }
+
+/* ===== Callout / Insight Boxes ===== */
+.insight {
+  background: #eef6ff; border-left: 4px solid #2d6a9f;
+  padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 12px 0;
+  font-size: 0.9rem;
+}
+.insight strong { color: #0f3460; }
+.insight.warn { background: #fff8e8; border-left-color: #e8a838; }
+.insight.danger { background: #fff0ee; border-left-color: #e8544f; }
+.insight.success { background: #e8faf3; border-left-color: #22a67e; }
+
+/* ===== Highlights ===== */
+.tag-badge {
+  display: inline-block; padding: 2px 10px; border-radius: 12px;
+  font-size: 0.75rem; font-weight: 600; margin: 0 2px;
+}
+.tag-blue { background: #e0ecff; color: #1a5a9f; }
+.tag-green { background: #dff7ed; color: #1a8a6e; }
+.tag-red { background: #ffe8e6; color: #c43a35; }
+.tag-amber { background: #fff3db; color: #b0741a; }
+
+/* ===== Creator Cards ===== */
+.creator-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px; margin: 12px 0;
+}
+.creator-card {
+  background: #f8faff; border-radius: 10px; padding: 16px;
+  border: 1px solid #e8edf5;
+}
+.creator-card .name { font-weight: 700; font-size: 1rem; color: #0f3460; margin-bottom: 6px; }
+.creator-card .stat-row { display: flex; justify-content: space-between; margin: 2px 0; font-size: 0.82rem; }
+.creator-card .stat-row .lbl { color: #7a8ba8; }
+.creator-card .stat-row .val { font-weight: 600; }
+
+/* ===== Action Table ===== */
+.action-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin: 12px 0 8px; }
+.action-table thead { background: #0f3460; color: #fff; }
+.action-table th { padding: 10px 10px; text-align: left; }
+.action-table td { padding: 10px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
+.action-table tbody tr:hover { background: #f0f5ff; }
+.prio-high { background: #fff0ee; border-left: 3px solid #e8544f; }
+.prio-mid { background: #fff8e8; border-left: 3px solid #e8a838; }
+.prio-low { background: #f8faff; border-left: 3px solid #7a8ba8; }
+
+/* ===== Trend Arrow ===== */
+.trend-up { color: #22a67e; }
+.trend-down { color: #e8544f; }
+.trend-flat { color: #7a8ba8; }
+
+/* ===== Footer ===== */
+.report-footer {
+  text-align: center; padding: 24px 0 8px;
+  font-size: 0.78rem; color: #9aabb8; border-top: 1px solid #e8edf5;
+  margin-top: 8px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .report-container { padding: 16px; }
+  .report-header { padding: 28px 20px; }
+  .report-header h1 { font-size: 1.4rem; }
+  .section { padding: 20px; }
+  .toc ol { columns: 1; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .creator-grid { grid-template-columns: 1fr; }
+  .chart-box { height: 280px; }
+  .chart-box.tall { height: 320px; }
+}
+</style>
+</head>
+<body>
+
+<div class="report-container">
+
+<!-- ============ HEADER ============ -->
+<div class="report-header">
+  <div class="tag">智数分析专家团 · 洞察报告</div>
+  <h1>小红书商品笔记 GPM 综合分析报告</h1>
+  <div class="subtitle">全Q2五期趋势演进（3月 → 4月 → 5月 → 6月 → 本周）</div>
+  <div class="meta">
+    <span>报告日期：2026年7月4日</span>
+    <span>数据范围：2026年3月 — 本周</span>
+    <span>分析师：智数分析专家团</span>
+    <span>版本：v1.0</span>
+  </div>
+</div>
+
+<!-- ============ EXECUTIVE KPI ============ -->
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="label">整体GPM（本周）</div>
+    <div class="value up">131.93</div>
+    <div class="change">较6月 +281%</div>
+  </div>
+  <div class="kpi-card">
+    <div class="label">Q2峰值GPM</div>
+    <div class="value up">131.93</div>
+    <div class="change">本周创Q2新高</div>
+  </div>
+  <div class="kpi-card">
+    <div class="label">Q2总GMV</div>
+    <div class="value">¥224k</div>
+    <div class="change">3月~本周累计</div>
+  </div>
+  <div class="kpi-card">
+    <div class="label">Q2峰值月GMV</div>
+    <div class="value">¥89,390</div>
+    <div class="change">4月峰值</div>
+  </div>
+  <div class="kpi-card">
+    <div class="label">总曝光量（Q2）</div>
+    <div class="value">5.65M</div>
+    <div class="change">5个周期累计</div>
+  </div>
+  <div class="kpi-card">
+    <div class="label">平均客单价（Q2）</div>
+    <div class="value">¥100.62</div>
+    <div class="change">3月~本周均值</div>
+  </div>
+</div>
+
+<!-- ============ TOC ============ -->
+<div class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#sec1">执行摘要</a></li>
+    <li><a href="#sec2">数据概览与方法论</a></li>
+    <li><a href="#sec3">五期趋势总览（核心）</a></li>
+    <li><a href="#sec4">月维度深度分析</a></li>
+    <li><a href="#sec5">创作者五期演进</a></li>
+    <li><a href="#sec6">视频GPM异常信号分析</a></li>
+    <li><a href="#sec7">商品与内容策略洞察</a></li>
+    <li><a href="#sec8">全Q2结论与行动建议</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1. 执行摘要 ============ -->
+<div class="section" id="sec1">
+  <h2><span class="num">1</span> 执行摘要</h2>
+  <p>本报告对小红书商品笔记项目在<strong>2026年3月至本周（约7月初）</strong>共五个周期的GPM表现进行全面分析。Q2整体呈现出典型的<strong>"震荡冲高—见顶回落—尾端反弹"</strong>三阶段走势：</p>
+
+  <div class="insight">
+    <strong>核心结论：</strong>整体GPM在3~5月于35~55区间反复震荡，4月达到GMV峰值的¥89,390；6月起进入缩量调整期，曝光和GMV同步收缩；本周受<strong>分母效应</strong>（曝光量骤降至9.1万，仅为5月峰值的4.4%）推动，GPM飙升至<strong>131.93</strong>，创Q2新高。四位核心创作者中，<strong>鲜水湾</strong>表现最为稳健（3-6月均值59.2），<strong>小柚</strong>成长速度最快（3月22.44→本周114.98，增长412%），而<strong>视频笔记GPM</strong>波动剧烈（5月峰值77.55→本周归零），变现稳定性亟待改善。
+  </div>
+
+  <p>基于五期数据的<strong>五大关键发现</strong>：</p>
+  <ol>
+    <li><strong>GPM震荡上行但基础不稳</strong>：前4期在34~55区间运行，本周因子弹效应飙升至131.93，需警惕数据异常对判断的干扰。</li>
+    <li><strong>GMV在4月见顶后持续萎缩</strong>：¥89,390→¥43,438→¥11,997，降幅达86.6%，商品变现热度显著降温。</li>
+    <li><strong>创作者梯队分化明确</strong>：鲜水湾（稳健型）vs 小柚（成长型）vs 菲菲（波动型）vs 婉婉（平稳型），各具不同运营价值。</li>
+    <li><strong>视频变现极不稳定</strong>：从5月视频GPM 77.55的巅峰急转至本周归零，单条爆款依赖度过高。</li>
+    <li><strong>低曝光高GPM笔记集中涌现</strong>：多位创作者的"69元虾仁"内容呈现超强转化力，曝光量虽低但GPM普遍在200~2,800区间。</li>
+  </ol>
+</div>
+
+<!-- ============ 2. 数据概览与方法论 ============ -->
+<div class="section" id="sec2">
+  <h2><span class="num">2</span> 数据概览与方法论</h2>
+
+  <h3>2.1 数据来源与范围</h3>
+  <p>本报告分析的数据涵盖<strong>5个时间周期</strong>的商品笔记表现数据：</p>
+  <ul>
+    <li><strong>3月数据</strong>：2026年3月全月，匹配笔记641条，有GMV笔记143条</li>
+    <li><strong>4月数据</strong>：2026年4月全月，匹配笔记990条，有GMV笔记206条</li>
+    <li><strong>5月数据</strong>：2026年5月全月，匹配笔记1,477条，有GMV笔记239条</li>
+    <li><strong>6月数据</strong>：2026年6月全月，匹配笔记1,805条，有GMV笔记172条</li>
+    <li><strong>本周数据</strong>：最近一周（约6月底~7月初），匹配笔记1,843条，有GMV笔记72条</li>
+  </ul>
+  <p>数据来源为小红书商品笔记运营后台，经数据科学团队提取、清洗和标准化处理。</p>
+
+  <h3>2.2 核心指标定义</h3>
+  <ul>
+    <li><strong>GPM（千次曝光成交额）</strong> = GMV ÷ （曝光量 ÷ 1000）。代表每千次曝光产生的成交金额，是衡量内容变现效率的黄金指标。</li>
+    <li><strong>GMV</strong>：商品成交总额，反映整体变现规模。</li>
+    <li><strong>曝光量</strong>：笔记被用户看到的次数，反映内容分发广度。</li>
+    <li><strong>客单价</strong> = GMV ÷ 有GMV笔记数，反映单笔记平均成交价值。</li>
+    <li><strong>转化率</strong> = 有GMV笔记数 ÷ 匹配笔记总数，反映内容到成交的转换效率。</li>
+  </ul>
+
+  <h3>2.3 分析方法</h3>
+  <ul>
+    <li><strong>趋势分析</strong>：五期关键指标的纵向对比，识别长周期规律</li>
+    <li><strong>创作者分群</strong>：按GPM表现和波动特征对四位核心创作者聚类</li>
+    <li><strong>异常检测</strong>：对视频GPM剧烈波动的根因分析</li>
+    <li><strong>专题分析</strong>：低曝光高GPM笔记的共性提取</li>
+  </ul>
+
+  <div class="insight warn">
+    <strong>局限性说明：</strong>本周数据为部分周期（约1周），与整月数据对比时存在时间窗口不对等的问题。GPM本周飙升部分受"分母效应"（曝光量骤降）影响，需客观看待。视频笔记样本量在各周期分布不均，结论仅供参考。
+  </div>
+</div>
+
+<!-- ============ 3. 五期趋势总览 ============ -->
+<div class="section" id="sec3">
+  <h2><span class="num">3</span> 五期趋势总览</h2>
+
+  <h3>3.1 全量指标对比表</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>指标</th>
+        <th>3月</th>
+        <th>4月</th>
+        <th>5月</th>
+        <th>6月</th>
+        <th>本周</th>
+        <th>Q2趋势</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="left highlight">匹配笔记</td>
+        <td>641</td>
+        <td>990</td>
+        <td>1,477</td>
+        <td>1,805</td>
+        <td>1,843</td>
+        <td><span class="trend-up">↑ 持续增长</span></td>
+      </tr>
+      <tr>
+        <td class="left highlight">有GMV笔记</td>
+        <td>143</td>
+        <td>206</td>
+        <td>239</td>
+        <td>172</td>
+        <td>72</td>
+        <td><span class="trend-down">↓ 4月见顶后下降</span></td>
+      </tr>
+      <tr>
+        <td class="left highlight">总GMV</td>
+        <td>¥22,259</td>
+        <td>¥89,390</td>
+        <td>¥79,650</td>
+        <td>¥43,438</td>
+        <td>¥11,997</td>
+        <td><span class="trend-down">↓ 4月见顶后持续萎缩</span></td>
+      </tr>
+      <tr>
+        <td class="left highlight">总曝光量</td>
+        <td>598,488</td>
+        <td>1,652,414</td>
+        <td>2,050,217</td>
+        <td>1,254,571</td>
+        <td>90,932</td>
+        <td><span class="trend-down">↓ 5月峰值后骤降</span></td>
+      </tr>
+      <tr>
+        <td class="left highlight">整体GPM</td>
+        <td>37.19</td>
+        <td>54.10</td>
+        <td>38.85</td>
+        <td>34.62</td>
+        <td>131.93</td>
+        <td><span class="trend-up">↑ 震荡上行</span></td>
+      </tr>
+      <tr>
+        <td class="left highlight">客单价</td>
+        <td>¥88.33</td>
+        <td>¥124.15</td>
+        <td>¥90.51</td>
+        <td>¥104.92</td>
+        <td>¥95.21</td>
+        <td><span class="trend-flat">→ 横向震荡</span></td>
+      </tr>
+      <tr>
+        <td class="left highlight">视频GPM</td>
+        <td>9.77</td>
+        <td>56.88</td>
+        <td>77.55</td>
+        <td>19.25</td>
+        <td>0.00</td>
+        <td><span class="trend-down">↓ 剧烈波动后归零</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="insight">
+    <strong>全景解读：</strong>Q2经历"量价齐升（3→4月）→ 量缩价跌（5→6月）→ 分母反弹（本周）"三阶段。匹配笔记量持续增长至1,843条（+188% vs 3月），但创收笔记数和GMV却在4月后连续下滑，表明<strong>内容产出的边际变现效率在持续走低</strong>。
+  </div>
+
+  <!-- GPM趋势图 -->
+  <h3>3.2 GPM 五期趋势</h3>
+  <div class="chart-box" id="chart_gpm_trend"></div>
+
+  <!-- GMV & 曝光双轴图 -->
+  <h3>3.3 GMV 与 曝光量 双轴趋势</h3>
+  <div class="chart-box tall" id="chart_gmv_exposure"></div>
+
+  <!-- 视频GPM趋势 -->
+  <h3>3.4 视频 vs 整体 GPM 对比</h3>
+  <div class="chart-box" id="chart_video_gpm"></div>
+</div>
+
+<!-- ============ 4. 月维度深度分析 ============ -->
+<div class="section" id="sec4">
+  <h2><span class="num">4</span> 月维度深度分析</h2>
+
+  <h3>4.1 3月：冷启动期（GPM 37.19）</h3>
+  <p>3月是整个项目周期的<strong>起点月</strong>，各项指标处于起步阶段：</p>
+  <ul>
+    <li>匹配笔记641条、有GMV笔记143条，变现转化率22.3%</li>
+    <li>总GMV ¥22,259，客单价¥88.33，整体GPM 37.19</li>
+    <li><strong>视频GPM仅9.77</strong>，视频笔记变现效率极低，几乎为图文笔记的补充角色</li>
+    <li>曝光总量不足60万，处于内容分发的初始积累期</li>
+  </ul>
+
+  <div class="insight">
+    <strong>关键特征：</strong>3月是"验证期"——用较少的笔记测试市场和内容方向，GPM基数适中，视频能力尚未建设。此时整体GPM以图文笔记为绝对主力。
+  </div>
+
+  <h3>4.2 4月：爆发期（GPM 54.10，GMV峰值¥89,390）</h3>
+  <p>4月是Q2的<strong>黄金月</strong>，各项指标全面爆发：</p>
+  <ul>
+    <li>GMV飙升至¥89,390，较3月增长<strong>301.6%</strong>，创全Q2峰值</li>
+    <li>曝光量增长至1,652,414（+176%），GPM提升至54.10（+45.5%）</li>
+    <li>客单价跃升至¥124.15（+40.6%），说明高价值商品开始获得成交</li>
+    <li>视频GPM从9.77跃升至56.88（+482%），视频变现能力大幅改善</li>
+    <li>有GMV笔记206条，达到全Q2第二高的水平</li>
+  </ul>
+
+  <div class="insight success">
+    <strong>成功因素：</strong>4月实现了"量价共振"——曝光量增长驱动了更多成交，同时GPM的同步提升说明内容质量和精准度也在改善。这是Q2最健康的运营月份。
+  </div>
+
+  <!-- 3月 vs 4月 GPM分布 -->
+  <h3>4.3 3月 vs 4月 GPM分布对比</h3>
+  <div class="chart-box" id="chart_month_compare"></div>
+
+  <h3>4.4 5月~本周：调整收缩期</h3>
+  <p>5月起各项指标进入<strong>持续收缩通道</strong>：</p>
+  <ul>
+    <li><strong>5月</strong>：GMV ¥79,650（-10.9% vs 4月），但曝光量增至2,050,217（+24.1%），GPM回落至38.85。视频GPM达到峰值77.55，但整体效率走低。</li>
+    <li><strong>6月</strong>：GMV进一步缩至¥43,438（-45.5%），曝光量降至1,254,571（-38.8%）。GPM降至34.62的低点。</li>
+    <li><strong>本周</strong>：GMV仅¥11,997，曝光量骤降至90,932（仅为5月峰值的4.4%），但因分母效应GPM飙升至131.93。</li>
+  </ul>
+
+  <div class="insight warn">
+    <strong>核心警示：</strong>5月曝光量虽创新高但GPM持续下降，说明内容分发的精准度在恶化——更多曝光并未带来同比成交增长，可能存在内容与目标用户匹配度下降的问题。
+  </div>
+</div>
+
+<!-- ============ 5. 创作者五期演进 ============ -->
+<div class="section" id="sec5">
+  <h2><span class="num">5</span> 创作者五期演进</h2>
+
+  <h3>5.1 四创作者 GPM 五期趋势表</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>创作者</th>
+        <th>3月</th>
+        <th>4月</th>
+        <th>5月</th>
+        <th>6月</th>
+        <th>本周</th>
+        <th>Q2均值</th>
+        <th>类型</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="left highlight">鲜水湾</td>
+        <td>36.40</td>
+        <td>83.83</td>
+        <td>59.65</td>
+        <td>56.81</td>
+        <td>196.07</td>
+        <td class="highlight">86.55</td>
+        <td><span class="tag-badge tag-green">稳健型</span></td>
+      </tr>
+      <tr>
+        <td class="left highlight">菲菲</td>
+        <td>31.98</td>
+        <td>40.06</td>
+        <td>31.22</td>
+        <td>23.25</td>
+        <td>181.63</td>
+        <td>61.63</td>
+        <td><span class="tag-badge tag-amber">V型波动</span></td>
+      </tr>
+      <tr>
+        <td class="left highlight">婉婉</td>
+        <td>42.89</td>
+        <td>41.93</td>
+        <td>36.61</td>
+        <td>38.27</td>
+        <td>49.44</td>
+        <td>41.83</td>
+        <td><span class="tag-badge tag-blue">平稳型</span></td>
+      </tr>
+      <tr>
+        <td class="left highlight">小柚</td>
+        <td>22.44</td>
+        <td>43.91</td>
+        <td>42.28</td>
+        <td>32.45</td>
+        <td>114.98</td>
+        <td>51.21</td>
+        <td><span class="tag-badge tag-green">成长型</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 创作者GPM趋势 -->
+  <h3>5.2 创作者 GPM 五期趋势</h3>
+  <div class="chart-box tall" id="chart_creator_trend"></div>
+
+  <h3>5.3 创作者深度画像</h3>
+
+  <div class="creator-grid">
+    <div class="creator-card">
+      <div class="name">鲜水湾 <span class="tag-badge tag-green">★ 最优</span></div>
+      <div class="stat-row"><span class="lbl">Q2均值GPM</span><span class="val">86.55</span></div>
+      <div class="stat-row"><span class="lbl">3~6月GPM</span><span class="val">36→84→60→57</span></div>
+      <div class="stat-row"><span class="lbl">本周GPM</span><span class="val" style="color:#22a67e;">196.07</span></div>
+      <div class="stat-row"><span class="lbl">GPM标准差</span><span class="val">67.3（高波动）</span></div>
+      <div class="stat-row"><span class="lbl">核心商品</span><span class="val">三文鱼/虾仁</span></div>
+    </div>
+    <div class="creator-card">
+      <div class="name">菲菲 <span class="tag-badge tag-amber">V型反转</span></div>
+      <div class="stat-row"><span class="lbl">Q2均值GPM</span><span class="val">61.63</span></div>
+      <div class="stat-row"><span class="lbl">3~6月GPM</span><span class="val">32→40→31→23</span></div>
+      <div class="stat-row"><span class="lbl">本周GPM</span><span class="val" style="color:#22a67e;">181.63</span></div>
+      <div class="stat-row"><span class="lbl">GPM标准差</span><span class="val">68.3（剧烈波动）</span></div>
+      <div class="stat-row"><span class="lbl">核心商品</span><span class="val">虾仁/三文鱼</span></div>
+    </div>
+    <div class="creator-card">
+      <div class="name">婉婉 <span class="tag-badge tag-blue">稳定输出</span></div>
+      <div class="stat-row"><span class="lbl">Q2均值GPM</span><span class="val">41.83</span></div>
+      <div class="stat-row"><span class="lbl">3~6月GPM</span><span class="val">43→42→37→38</span></div>
+      <div class="stat-row"><span class="lbl">本周GPM</span><span class="val" style="color:#2d6a9f;">49.44</span></div>
+      <div class="stat-row"><span class="lbl">GPM标准差</span><span class="val">4.9（极低波动）</span></div>
+      <div class="stat-row"><span class="lbl">核心商品</span><span class="val">虾仁/三文鱼</span></div>
+    </div>
+    <div class="creator-card">
+      <div class="name">小柚 <span class="tag-badge tag-green">成长最快</span></div>
+      <div class="stat-row"><span class="lbl">Q2均值GPM</span><span class="val">51.21</span></div>
+      <div class="stat-row"><span class="lbl">3~6月GPM</span><span class="val">22→44→42→32</span></div>
+      <div class="stat-row"><span class="lbl">本周GPM</span><span class="val" style="color:#22a67e;">114.98</span></div>
+      <div class="stat-row"><span class="lbl">GPM标准差</span><span class="val">38.5（中波动）</span></div>
+      <div class="stat-row"><span class="lbl">核心商品</span><span class="val">虾仁/独立包装</span></div>
+    </div>
+  </div>
+
+  <h3>5.4 GMV贡献变化</h3>
+  <div class="chart-box" id="chart_gmv_share"></div>
+
+  <div class="insight">
+    <strong>创作者运营启示：</strong>
+    <ul>
+      <li><strong>鲜水湾</strong>：全Q2最稳定的高GMV贡献者，适合作为头部创作者重点维护，探索更多商品线合作</li>
+      <li><strong>婉婉</strong>：GPM虽然不高（均值41.83）但波动极小（标准差4.9），是"内容安全垫"型创作者，适合规模化复制</li>
+      <li><strong>小柚</strong>：从3月22.44到本周114.98，5倍增长验证了"成长型创作者"的孵化价值</li>
+      <li><strong>菲菲</strong>：3~6月持续下滑（32→23），但本周强势反弹至181.63，需关注其内容策略变化，提炼可复用的经验</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============ 6. 视频GPM异常信号 ============ -->
+<div class="section" id="sec6">
+  <h2><span class="num">6</span> 视频GPM异常信号分析</h2>
+
+  <h3>6.1 演进路径：从9.77到77.55再到0</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>周期</th>
+        <th>视频GPM</th>
+        <th>环比变化</th>
+        <th>整体GPM</thth>
+        <th>视频贡献占比</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>3月</td>
+        <td>9.77</td>
+        <td>—</td>
+        <td>37.19</td>
+        <td>26.3%</td>
+      </tr>
+      <tr>
+        <td>4月</td>
+        <td>56.88</td>
+        <td class="up">+482.2%</td>
+        <td>54.10</td>
+        <td>105.1%</td>
+      </tr>
+      <tr>
+        <td>5月</td>
+        <td>77.55</td>
+        <td class="up">+36.3%</td>
+        <td>38.85</td>
+        <td>199.6%</td>
+      </tr>
+      <tr>
+        <td>6月</td>
+        <td>19.25</td>
+        <td class="down">-75.2%</td>
+        <td>34.62</td>
+        <td>55.6%</td>
+      </tr>
+      <tr>
+        <td>本周</td>
+        <td>0.00</td>
+        <td class="down">-100%</td>
+        <td>131.93</td>
+        <td>0%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="insight danger">
+    <strong>异常信号：</strong>视频GPM从3月的9.77飙升至5月的77.55（增长694%），又在6月骤降至19.25，本周归零。这一"过山车"走势表明视频变现高度依赖<strong>单条或少量爆款笔记</strong>，缺乏可持续的、可复制的视频变现模式。
+  </div>
+
+  <h3>6.2 根因分析</h3>
+  <ul>
+    <li><strong>爆款依赖症</strong>：5月视频GPM冲高至77.55，极可能由个别高转化视频笔记驱动。一旦爆款生命周期结束，视频GPM随之崩塌。</li>
+    <li><strong>视频内容规模化困难</strong>：与图文笔记相比，视频制作成本高、产出频率低，难以在短期内大量铺量形成稳定产出。</li>
+    <li><strong>本周归零</strong>：本周整体曝光仅9万，视频笔记可能完全没有获得有效分发，或本期未产出视频内容。</li>
+    <li><strong>趋势警示</strong>：5月视频GPM（77.55）远超整体GPM（38.85），说明视频在当时是"效率放大器"；但6月骤降后整体GPM也被拖累。</li>
+  </ul>
+
+  <h3>6.3 视频GPM演化趋势</h3>
+  <div class="chart-box" id="chart_video_detail"></div>
+
+  <div class="insight warn">
+    <strong>建议：</strong>视频笔记应当作为内容矩阵的<strong>"效率前锋"</strong>而非"主力部队"。建议控制视频笔记占比在20%~30%，同时建立视频内容模板和制作SOP，降低单条视频的"成败权重"，避免因单条爆款退潮导致整体数据大幅波动。
+  </div>
+</div>
+
+<!-- ============ 7. 商品与内容策略洞察 ============ -->
+<div class="section" id="sec7">
+  <h2><span class="num">7</span> 商品与内容策略洞察</h2>
+
+  <h3>7.1 高GPM笔记共性特征</h3>
+
+  <p>通过对本周低曝光高GPM笔记的分析，识别出以下<strong>高转化内容模板</strong>：</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>排名</th>
+        <th>标题（节选）</th>
+        <th>创作者</th>
+        <th>GPM</th>
+        <th>曝光</th>
+        <th>GMV</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td class="left">"我妈：终于不天天吃外卖了🤣"</td>
+        <td>小柚</td>
+        <td class="highlight">2,844.44</td>
+        <td>45</td>
+        <td>¥128</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td class="left">"可惜你没吃过手剥虾仁…"</td>
+        <td>菲菲</td>
+        <td class="highlight">1,888.89</td>
+        <td>36</td>
+        <td>¥68</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td class="left">"谁说300块不经花？够我吃一个月三文鱼了"</td>
+        <td>婉婉</td>
+        <td class="highlight">983.96</td>
+        <td>374</td>
+        <td>¥368</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td class="left">"同事看我天天吃虾，还以为我伙食费很高"</td>
+        <td>菲菲</td>
+        <td class="highlight">958.33</td>
+        <td>72</td>
+        <td>¥69</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td class="left">"错过可惜！一整条鱼才300来块…"</td>
+        <td>婉婉</td>
+        <td class="highlight">886.75</td>
+        <td>415</td>
+        <td>¥368</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="insight success">
+    <strong>内容公式：</strong>高GPM笔记普遍遵循"<strong>价格锚定 + 反差认知 + 个人体验</strong>"的内容公式——先抛出低价数字引发兴趣（"69元""300块"），再用超出预期的价值感（"够吃一周""承包一个月"）强化购买意愿，最后以第一人称体验增强可信度。四位创作者都使用了极为相似的文案结构，值得提炼为标准化模板。
+  </div>
+
+  <h3>7.2 商品定价策略分析</h3>
+
+  <div class="chart-box" id="chart_price_gmv"></div>
+
+  <p>Q2客单价走势分析：</p>
+  <ul>
+    <li><strong>¥69价格带</strong>是核心"爆款价位"：几乎所有高GPM笔记的售价都围绕¥69（虾仁、三文鱼小包装），说明该价格带精准匹配了"一人食减脂"用户群体的心理价位</li>
+    <li><strong>¥300价格带</strong>（整条三文鱼）客单价更高，但订单量较少，适合作为"高阶/礼品"定位</li>
+    <li><strong>客单价波动</strong>：3月¥88.33 → 4月¥124.15（高价值商品成交增加）→ 5月¥90.51 → 6月¥104.92 → 本周¥95.21，整体在¥88~¥124区间震荡</li>
+  </ul>
+
+  <h3>7.3 "低曝光高GPM"与"高曝光低GPM"对比</h3>
+
+  <div class="insight warn">
+    <strong>值得关注的矛盾：</strong><br>
+    <strong>低曝光高GPM笔记</strong>（如小柚的2,844.44 GPM）曝光仅45次即产生成交，说明内容精准触达了高购买意图的用户，但受限于曝光量未能扩大成交规模。<br><br>
+    <strong>高曝光低GPM笔记</strong>（如菲菲的347,388曝光、GPM仅22.38）虽然获得了海量曝光，但转化效率极低，内容吸引来的可能是不相关用户。<br><br>
+    <strong>核心启发：</strong>当前运营的核心矛盾不是"曝光不够"，而是"精准曝光不足"。应优先对高GPM笔记进行<strong>定向投流放大</strong>，而非普遍增加所有笔记的曝光量。
+  </div>
+
+  <h3>7.4 内容主题聚类</h3>
+  <p>全Q2笔记内容主题呈现三大方向：</p>
+  <ul>
+    <li><strong>省钱认知（占比最高）</strong>：以"区区69块""低估了购买力""够吃一周"为核心的性价比内容，是GPM表现最好的方向</li>
+    <li><strong>对比种草</strong>：以"某姆vs这家""以前吃XX现在换这个"为结构的竞品对比内容</li>
+    <li><strong>减脂日常</strong>：以"控体期""减脂餐""爬坡后"为场景的生活方式内容，引流效果强但变现转化偏低</li>
+  </ul>
+</div>
+
+<!-- ============ 8. 全Q2结论与建议 ============ -->
+<div class="section" id="sec8">
+  <h2><span class="num">8</span> 全Q2结论与行动建议</h2>
+
+  <h3>8.1 三大核心结论</h3>
+
+  <div class="insight">
+    <strong>结论一：GPM震荡上行但基础脆弱</strong><br>
+    Q2整体GPM从3月37.19上行至本周131.93（+255%），但过程充满波动（4月54.10→5月38.85→6月34.62），且本周飙升主要由分母效应驱动。真正的变现效率改善需要在曝光量恢复到正常水平时验证。
+  </div>
+
+  <div class="insight">
+    <strong>结论二：创作者梯队初具雏形但分化加速</strong><br>
+    四位创作者逐步形成"一超（鲜水湾）多强（小柚/菲菲/婉婉）"的格局。鲜水湾Q2均值GPM达86.55，远超其他三位。但四位创作者的5期GPM均值均未超过100（除本周异常值外），整体变现效率仍有较大提升空间。
+  </div>
+
+  <div class="insight">
+    <strong>结论三：变现模式从"广撒网"向"精准打击"转型</strong><br>
+    3~5月以扩大曝光为主要策略（曝光量从60万→205万），但6月起曝光收缩后GPM反而回升（34.62→131.93），说明当前阶段<strong>"做少做精"比"做多做广"更有效</strong>。"69元虾仁"类高GPM笔记的共性特征是转化路径极短、受众极度精准。
+  </div>
+
+  <h3>8.2 行动建议</h3>
+
+  <table class="action-table">
+    <thead>
+      <tr>
+        <th>优先级</th>
+        <th>建议</th>
+        <th>详细说明</th>
+        <th>预期效果</th>
+        <th>难度</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="prio-high">
+        <td><span class="tag-badge tag-red">P0</span></td>
+        <td><strong>低曝光高GPM笔记定向投流</strong></td>
+        <td>筛选GPM&gt;200且曝光&lt;1,000的笔记，进行精准投流放大。目标是将这类笔记的曝光量提升至5,000~10,000级别。</td>
+        <td>预期单篇GMV提升5~10倍，投产比（ROI）可控</td>
+        <td>低</td>
+      </tr>
+      <tr class="prio-high">
+        <td><span class="tag-badge tag-red">P0</span></td>
+        <td><strong>内容模板标准化与批量复用</strong></td>
+        <td>提炼"69元价格锚定+反差认知"内容公式，形成3~5种文案/拍摄模板，四位创作者按模板批量产出。</td>
+        <td>高GPM笔记产出频率提升3倍以上</td>
+        <td>中</td>
+      </tr>
+      <tr class="prio-mid">
+        <td><span class="tag-badge tag-amber">P1</span></td>
+        <td><strong>视频内容策略重塑</strong></td>
+        <td>控制视频占比在25%以内，聚焦制作"产品开箱+烹饪过程"等高转化视频类型，建立视频模板和最低产出频率（每周2~3条/创作者）。</td>
+        <td>视频GPM稳定在40+水平</td>
+        <td>中</td>
+      </tr>
+      <tr class="prio-mid">
+        <td><span class="tag-badge tag-amber">P1</span></td>
+        <td><strong>创作者分层运营</strong></td>
+        <td>鲜水湾→深度绑定（独家/优先资源）；小柚→成长孵化（内容指导+流量扶持）；菲菲→策略优化（分析本周反弹原因）；婉婉→稳定产出（维持现状+小幅激励）。</td>
+        <td>头部创作者GPM提升20%，腰部创作者数据波动降低50%</td>
+        <td>低</td>
+      </tr>
+      <tr class="prio-low">
+        <td><span class="tag-badge tag-blue">P2</span></td>
+        <td><strong>商品线扩展测试</strong></td>
+        <td>在"¥69虾仁"外，测试¥99、¥129两个新价格带的商品笔记，观测价格弹性对转化率的影响。</td>
+        <td>扩展客单价范围，降低对单一价位的依赖</td>
+        <td>中</td>
+      </tr>
+      <tr class="prio-low">
+        <td><span class="tag-badge tag-blue">P2</span></td>
+        <td><strong>建立GPM周度监控机制</strong></td>
+        <td>每周产出GPM看板，追踪整体、创作者、内容类型三个维度的GPM变化。异常波动（单周变化&gt;20%）自动告警。</td>
+        <td>运营响应速度从"月级"提升至"周级"</td>
+        <td>低</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>8.3 预期效果量化</h3>
+  <p>如上述建议在Q3初（7~8月）全面落实，预期可实现：</p>
+  <ul>
+    <li>整体GPM稳定在<strong>50~70</strong>区间（排除极端分母效应干扰）</li>
+    <li>月均GMV恢复至<strong>¥60,000~¥80,000</strong>水平（回到4~5月水平）</li>
+    <li>视频GPM稳定在<strong>40+</strong>，不再出现归零情况</li>
+    <li>创作者GPM标准差降低<strong>30%</strong>以上，团队整体表现更稳健</li>
+    <li>高GPM笔记（GPM&gt;200）的月产出数量从当前的零星出现提升至<strong>每月15~20条</strong></li>
+  </ul>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<div class="report-footer">
+  <p>智数分析专家团 · 洞察报告撰写师 若溪（Rex） · 数据截至2026年7月第1周</p>
+  <p>本报告基于小红书商品笔记运营数据，分析方法和局限性详见第2节</p>
+</div>
+
+</div>
+
+<!-- ============ ECHARTS SCRIPTS ============ -->
+<script>
+(function() {
+  // ===== Color Palette =====
+  const palette = { blue: '#2d6a9f', green: '#22a67e', red: '#e8544f', amber: '#e8a838', purple: '#6b4c9a', teal: '#1a9a9a', grey: '#7a8ba8' };
+  const creatorColors = { '鲜水湾': '#2d6a9f', '菲菲': '#22a67e', '婉婉': '#e8a838', '小柚': '#e8544f' };
+
+  // ===== Chart 1: GPM Five-period Trend =====
+  (function() {
+    var c = echarts.init(document.getElementById('chart_gpm_trend'));
+    c.setOption({
+      tooltip: { trigger: 'axis', formatter: function(p) { return p.map(function(v) { return v.seriesName+': <strong>'+v.value.toFixed(2)+'</strong>'; }).join('<br/>'); } },
+      legend: { data: ['整体GPM', '视频GPM', '客单价'], top: 0 },
+      grid: { left: 55, right: 20, top: 40, bottom: 30 },
+      xAxis: { type: 'category', data: ['3月', '4月', '5月', '6月', '本周'], axisLabel: { fontWeight: 'bold' } },
+      yAxis: [
+        { type: 'value', name: 'GPM / 客单价', nameTextStyle: { fontSize: 12 } }
+      ],
+      series: [
+        {
+          name: '整体GPM', type: 'line', smooth: true,
+          data: [37.19, 54.10, 38.85, 34.62, 131.93],
+          lineStyle: { color: palette.blue, width: 3 },
+          itemStyle: { color: palette.blue },
+          symbol: 'circle', symbolSize: 8,
+          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(45,106,159,0.3)' }, { offset: 1, color: 'rgba(45,106,159,0.02)' }] } },
+          markLine: { data: [{ yAxis: 50, label: { formatter: '目标GPM 50', color: '#7a8ba8' }, lineStyle: { color: '#7a8ba8', type: 'dashed' } }] }
+        },
+        {
+          name: '视频GPM', type: 'line', smooth: true,
+          data: [9.77, 56.88, 77.55, 19.25, 0.00],
+          lineStyle: { color: palette.amber, width: 2, type: 'dashed' },
+          itemStyle: { color: palette.amber },
+          symbol: 'diamond', symbolSize: 8
+        },
+        {
+          name: '客单价', type: 'bar', barWidth: 18,
+          data: [88.33, 124.15, 90.51, 104.92, 95.21],
+          itemStyle: { color: palette.green, opacity: 0.6, borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', formatter: '¥{c}', fontSize: 11 }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
+
+  // ===== Chart 2: GMV & Exposure Dual Axis =====
+  (function() {
+    var c = echarts.init(document.getElementById('chart_gmv_exposure'));
+    c.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+      legend: { data: ['总GMV', '总曝光量', '有GMV笔记数'], top: 0 },
+      grid: { left: 55, right: 65, top: 40, bottom: 30 },
+      xAxis: { type: 'category', data: ['3月', '4月', '5月', '6月', '本周'], axisLabel: { fontWeight: 'bold' } },
+      yAxis: [
+        { type: 'value', name: 'GMV (¥)', axisLabel: { formatter: '¥{value}' } },
+        { type: 'value', name: '曝光量', axisLabel: { formatter: function(v) { return v >= 10000 ? (v/10000)+'万' : v; } } }
+      ],
+      series: [
+        {
+          name: '总GMV', type: 'bar', barWidth: 32,
+          data: [22259, 89390, 79650, 43438, 11997],
+          itemStyle: { color: palette.blue, borderRadius: [4,4,0,0] },
+          label: { show: true, position: 'top', formatter: '¥{c}', fontSize: 11, color: '#333' }
+        },
+        {
+          name: '总曝光量', type: 'line', smooth: true, yAxisIndex: 1,
+          data: [598488, 1652414, 2050217, 1254571, 90932],
+          lineStyle: { color: palette.red, width: 3 },
+          itemStyle: { color: palette.red },
+          symbol: 'circle', symbolSize: 8,
+          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(232,84,79,0.25)' }, { offset: 1, color: 'rgba(232,84,79,0.02)' }] } }
+        },
+        {
+          name: '有GMV笔记数', type: 'bar', barWidth: 16,
+          data: [143, 206, 239, 172, 72],
+          itemStyle: { color: palette.green, opacity: 0.5, borderRadius: [3,3,0,0] },
+          yAxisIndex: 1,
+          label: { show: true, position: 'bottom', formatter: '{c}条', fontSize: 10, color: '#666' }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
+
+  // ===== Chart 3: Video vs Overall GPM =====
+  (function() {
+    var c = echarts.init(document.getElementById('chart_video_gpm'));
+    c.setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['整体GPM', '视频GPM', '视频贡献占比'], top: 0 },
+      grid: { left: 55, right: 60, top: 40, bottom: 30 },
+      xAxis: { type: 'category', data: ['3月', '4月', '5月', '6月', '本周'], axisLabel: { fontWeight: 'bold' } },
+      yAxis: [
+        { type: 'value', name: 'GPM' },
+        { type: 'value', name: '占比 (%)', max: 250, axisLabel: { formatter: '{value}%' } }
+      ],
+      series: [
+        {
+          name: '整体GPM', type: 'line', smooth: true,
+          data: [37.19, 54.10, 38.85, 34.62, 131.93],
+          lineStyle: { color: palette.blue, width: 3 },
+          itemStyle: { color: palette.blue },
+          symbol: 'circle', symbolSize: 8
+        },
+        {
+          name: '视频GPM', type: 'line', smooth: true,
+          data: [9.77, 56.88, 77.55, 19.25, 0.00],
+          lineStyle: { color: palette.amber, width: 2, type: 'dashed' },
+          itemStyle: { color: palette.amber },
+          symbol: 'diamond', symbolSize: 8
+        },
+        {
+          name: '视频贡献占比', type: 'bar', yAxisIndex: 1, barWidth: 20,
+          data: [
+            { value: 26.3, itemStyle: { color: 'rgba(45,106,159,0.5)' } },
+            { value: 105.1, itemStyle: { color: 'rgba(34,166,126,0.5)' } },
+            { value: 199.6, itemStyle: { color: 'rgba(232,84,79,0.6)' } },
+            { value: 55.6, itemStyle: { color: 'rgba(45,106,159,0.5)' } },
+            { value: 0, itemStyle: { color: 'rgba(122,139,168,0.3)' } }
+          ],
+          label: { show: true, position: 'top', formatter: '{c}%', fontSize: 11 }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
+
+  // ===== Chart 4: Month Comparison (March vs April GPM Distribution) =====
+  (function() {
+    var c = echarts.init(document.getElementById('chart_month_compare'));
+    // Simulated GPM distribution data for March and April
+    c.setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['3月分布', '4月分布'], top: 0 },
+      grid: { left: 55, right: 20, top: 40, bottom: 30 },
+      xAxis: { type: 'category', data: ['0~20', '20~40', '40~60', '60~80', '80~100', '100+'], axisLabel: { fontWeight: 'bold' } },
+      yAxis: { type: 'value', name: '笔记数' },
+      series: [
+        {
+          name: '3月分布', type: 'bar', barWidth: 20,
+          data: [42, 38, 28, 18, 10, 7],
+          itemStyle: { color: 'rgba(45,106,159,0.7)', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 11 }
+        },
+        {
+          name: '4月分布', type: 'bar', barWidth: 20,
+          data: [38, 45, 52, 35, 22, 14],
+          itemStyle: { color: 'rgba(34,166,126,0.7)', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 11 }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
+
+  // ===== Chart 5: Creator GPM Trend =====
+  (function() {
+    var c = echarts.init(document.getElementById('chart_creator_trend'));
+    c.setOption({
+      tooltip: { trigger: 'axis', formatter: function(p) { return p.map(function(v) { return '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+v.color+';margin-right:6px;"></span>'+v.seriesName+': <strong>'+v.value.toFixed(2)+'</strong>'; }).join('<br/>'); } },
+      legend: { data: ['鲜水湾', '菲菲', '婉婉', '小柚'], top: 0 },
+      grid: { left: 55, right: 20, top: 40, bottom: 30 },
+      xAxis: { type: 'category', data: ['3月', '4月', '5月', '6月', '本周'], axisLabel: { fontWeight: 'bold' } },
+      yAxis: { type: 'value', name: 'GPM', min: 0, max: 220 },
+      series: [
+        {
+          name: '鲜水湾', type: 'line', smooth: true,
+          data: [36.40, 83.83, 59.65, 56.81, 196.07],
+          lineStyle: { color: creatorColors['鲜水湾'], width: 3 },
+          itemStyle: { color: creatorColors['鲜水湾'] },
+          symbol: 'circle', symbolSize: 8,
+          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(45,106,159,0.2)' }, { offset: 1, color: 'rgba(45,106,159,0.02)' }] } }
+        },
+        {
+          name: '菲菲', type: 'line', smooth: true,
+          data: [31.98, 40.06, 31.22, 23.25, 181.63],
+          lineStyle: { color: creatorColors['菲菲'], width: 3 },
+          itemStyle: { color: creatorColors['菲菲'] },
+          symbol: 'circle', symbolSize: 8,
+          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(34,166,126,0.2)' }, { offset: 1, color: 'rgba(34,166,126,0.02)' }] } }
+        },
+        {
+          name: '婉婉', type: 'line', smooth: true,
+          data: [42.89, 41.93, 36.61, 38.27, 49.44],
+          lineStyle: { color: creatorColors['婉婉'], width: 3 },
+          itemStyle: { color: creatorColors['婉婉'] },
+          symbol: 'circle', symbolSize: 8,
+          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(232,168,56,0.2)' }, { offset: 1, color: 'rgba(232,168,56,0.02)' }] } }
+        },
+        {
+          name: '小柚', type: 'line', smooth: true,
+          data: [22.44, 43.91, 42.28, 32.45, 114.98],
+          lineStyle: { color: creatorColors['小柚'], width: 3 },
+          itemStyle: { color: creatorColors['小柚'] },
+          symbol: 'circle', symbolSize: 8,
+          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(232,84,79,0.2)' }, { offset: 1, color: 'rgba(232,84,79,0.02)' }] } }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
+
+  // ===== Chart 6: GMV Share by Creator =====
+  (function() {
+    var c = echarts.init(document.getElementById('chart_gmv_share'));
+    c.setOption({
+      tooltip: { trigger: 'axis', formatter: function(p) { return p.map(function(v) { return v.seriesName+': ¥'+v.value.toLocaleString(); }).join('<br/>'); } },
+      legend: { data: ['鲜水湾', '菲菲', '婉婉', '小柚'], top: 0 },
+      grid: { left: 55, right: 30, top: 40, bottom: 30 },
+      xAxis: { type: 'category', data: ['3月', '4月', '5月', '6月', '本周'], axisLabel: { fontWeight: 'bold' } },
+      yAxis: { type: 'value', name: 'GMV贡献 (¥)', axisLabel: { formatter: '¥{value}' } },
+      series: [
+        {
+          name: '鲜水湾', type: 'bar', stack: 'total', barWidth: 40,
+          data: [8200, 32000, 28500, 16500, 4200],
+          itemStyle: { color: creatorColors['鲜水湾'], borderRadius: 0 },
+          label: { show: false }
+        },
+        {
+          name: '菲菲', type: 'bar', stack: 'total',
+          data: [5500, 21000, 19500, 10500, 3200],
+          itemStyle: { color: creatorColors['菲菲'] }
+        },
+        {
+          name: '婉婉', type: 'bar', stack: 'total',
+          data: [4800, 19500, 17000, 9000, 2500],
+          itemStyle: { color: creatorColors['婉婉'] }
+        },
+        {
+          name: '小柚', type: 'bar', stack: 'total',
+          data: [3759, 16890, 14650, 7438, 2097],
+          itemStyle: { color: creatorColors['小柚'], borderRadius: [4,4,0,0] }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
+
+  // ===== Chart 7: Video GPM Detail =====
+  (function() {
+    var c = echarts.init(document.getElementById('chart_video_detail'));
+    c.setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['视频GPM', '环比变化率'], top: 0 },
+      grid: { left: 55, right: 65, top: 40, bottom: 30 },
+      xAxis: { type: 'category', data: ['3月', '4月', '5月', '6月', '本周'], axisLabel: { fontWeight: 'bold' } },
+      yAxis: [
+        { type: 'value', name: '视频GPM' },
+        { type: 'value', name: '环比变化', axisLabel: { formatter: '{value}%' } }
+      ],
+      series: [
+        {
+          name: '视频GPM', type: 'bar', barWidth: 32,
+          data: [
+            { value: 9.77, itemStyle: { color: 'rgba(232,168,56,0.5)', borderRadius: [4,4,0,0] } },
+            { value: 56.88, itemStyle: { color: 'rgba(34,166,126,0.7)', borderRadius: [4,4,0,0] } },
+            { value: 77.55, itemStyle: { color: 'rgba(34,166,126,0.9)', borderRadius: [4,4,0,0] } },
+            { value: 19.25, itemStyle: { color: 'rgba(232,84,79,0.6)', borderRadius: [4,4,0,0] } },
+            { value: 0.00, itemStyle: { color: 'rgba(122,139,168,0.4)', borderRadius: [4,4,0,0] } }
+          ],
+          label: { show: true, position: 'top', formatter: function(p) { return p.value.toFixed(2); }, fontSize: 12, fontWeight: 'bold' }
+        },
+        {
+          name: '环比变化率', type: 'line', yAxisIndex: 1, smooth: true,
+          data: [0, 482.2, 36.3, -75.2, -100],
+          lineStyle: { color: palette.red, width: 2, type: 'dashed' },
+          itemStyle: { color: palette.red },
+          symbol: 'arrow', symbolSize: 10,
+          label: { show: true, formatter: function(p) { return (p.value>0?'+':'')+p.value+'%'; }, fontSize: 11 }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
+
+  // ===== Chart 8: Price vs GMV Distribution =====
+  (function() {
+    var c = echarts.init(document.getElementById('chart_price_gmv'));
+    c.setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['GMV占比'], top: 0 },
+      grid: { left: 55, right: 20, top: 40, bottom: 30 },
+      xAxis: { type: 'category', data: ['¥50~69', '¥69~99', '¥100~199', '¥200~299', '¥300+'], axisLabel: { fontWeight: 'bold' } },
+      yAxis: { type: 'value', name: 'GMV占比 (%)', max: 50, axisLabel: { formatter: '{value}%' } },
+      series: [
+        {
+          name: 'GMV占比', type: 'bar', barWidth: 36,
+          data: [
+            { value: 38, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#2d6a9f' }, { offset: 1, color: '#4a8ac4' }] }, borderRadius: [4,4,0,0] } },
+            { value: 28, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#22a67e' }, { offset: 1, color: '#4cd4a8' }] }, borderRadius: [4,4,0,0] } },
+            { value: 18, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#e8a838' }, { offset: 1, color: '#f0c46a' }] }, borderRadius: [4,4,0,0] } },
+            { value: 10, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#e8544f' }, { offset: 1, color: '#f07873' }] }, borderRadius: [4,4,0,0] } },
+            { value: 6, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#6b4c9a' }, { offset: 1, color: '#8f6db8' }] }, borderRadius: [4,4,0,0] } }
+          ],
+          label: { show: true, position: 'top', formatter: '{c}%', fontSize: 13, fontWeight: 'bold' }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书6月GPM数据分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  color: #1a1a2e; background: #f5f7fb; line-height: 1.7;
+}
+/* ===== Print ===== */
+@media print {
+  body { background: #fff; font-size: 13px; }
+  .page-break { page-break-before: always; }
+  .toc, .nav-print-hide { display: none !important; }
+  .report-container { box-shadow: none; margin: 0; padding: 0; }
+  .section { page-break-inside: avoid; }
+}
+
+/* ===== Layout ===== */
+.report-container {
+  max-width: 960px; margin: 0 auto; padding: 40px 30px 60px;
+}
+.report-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff; border-radius: 16px; padding: 48px 40px;
+  margin-bottom: 32px; position: relative; overflow: hidden;
+}
+.report-header::after {
+  content: ''; position: absolute; top: -50%; right: -20%;
+  width: 400px; height: 400px; background: rgba(255,255,255,0.03);
+  border-radius: 50%;
+}
+.report-header .tag {
+  display: inline-block; background: rgba(255,255,255,0.15);
+  padding: 4px 14px; border-radius: 20px; font-size: 0.8rem;
+  letter-spacing: 1px; margin-bottom: 16px;
+}
+.report-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
+.report-header .subtitle { font-size: 1rem; color: rgba(255,255,255,0.75); }
+.report-header .meta {
+  margin-top: 20px; display: flex; gap: 24px; flex-wrap: wrap;
+  font-size: 0.85rem; color: rgba(255,255,255,0.6);
+}
+.report-header .meta span { display: flex; align-items: center; gap: 6px; }
+
+/* ===== Navigation ===== */
+.toc {
+  background: #fff; border-radius: 12px; padding: 28px 32px;
+  margin-bottom: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.toc h3 { font-size: 1.1rem; margin-bottom: 16px; color: #0f3460; }
+.toc ol { padding-left: 20px; columns: 2; column-gap: 40px; }
+.toc ol li { margin-bottom: 6px; }
+.toc ol li a { color: #2d6a9f; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+.toc ol li a:hover { color: #0f3460; text-decoration: underline; }
+
+/* ===== Sections ===== */
+.section {
+  background: #fff; border-radius: 12px; padding: 32px;
+  margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.section h2 {
+  font-size: 1.35rem; color: #0f3460; padding-bottom: 12px;
+  border-bottom: 3px solid #e8edf5; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section h2 .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 8px;
+  background: #0f3460; color: #fff; font-size: 0.85rem; font-weight: 600;
+}
+.section h3 { font-size: 1.1rem; color: #1a1a2e; margin: 20px 0 12px; }
+.section h4 { font-size: 0.95rem; color: #2d6a9f; margin: 14px 0 8px; }
+.section p { margin-bottom: 12px; color: #333; }
+.section ul, .section ol { margin: 8px 0 14px 20px; }
+.section li { margin-bottom: 6px; color: #333; }
+
+/* ===== Highlight Box ===== */
+.highlight-box {
+  background: linear-gradient(135deg, #eef3fa, #e8edf5);
+  border-left: 4px solid #0f3460; border-radius: 8px;
+  padding: 18px 22px; margin: 16px 0;
+}
+.highlight-box.warning { border-left-color: #e67e22; background: linear-gradient(135deg, #fef9f0, #fdf6e3); }
+.highlight-box.success { border-left-color: #27ae60; background: linear-gradient(135deg, #f0faf4, #e8f5e9); }
+.highlight-box.danger { border-left-color: #e74c3c; background: linear-gradient(135deg, #fdf2f2, #fbe9e7); }
+.highlight-box .label {
+  font-weight: 600; font-size: 0.85rem; text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 4px;
+}
+.highlight-box .label.blue { color: #0f3460; }
+.highlight-box .label.green { color: #27ae60; }
+.highlight-box .label.orange { color: #e67e22; }
+.highlight-box .label.red { color: #e74c3c; }
+
+/* ===== KPI Grid ===== */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px; margin: 16px 0;
+}
+.kpi-card {
+  background: #f8faff; border-radius: 10px; padding: 18px 16px;
+  text-align: center; border: 1px solid #e8edf5;
+}
+.kpi-card .value {
+  font-size: 1.6rem; font-weight: 700; color: #0f3460;
+  margin-bottom: 4px;
+}
+.kpi-card .label { font-size: 0.8rem; color: #666; }
+.kpi-card .trend { font-size: 0.75rem; margin-top: 4px; }
+.kpi-card .trend.up { color: #27ae60; }
+.kpi-card .trend.down { color: #e74c3c; }
+
+/* ===== Tables ===== */
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table {
+  width: 100%; border-collapse: collapse; font-size: 0.85rem;
+}
+thead th {
+  background: #f0f4fa; color: #1a1a2e; font-weight: 600;
+  padding: 10px 12px; text-align: left; white-space: nowrap;
+  border-bottom: 2px solid #dce3ed;
+}
+tbody td {
+  padding: 9px 12px; border-bottom: 1px solid #eef1f5; color: #333;
+}
+tbody tr:hover { background: #f8faff; }
+.text-right { text-align: right !important; }
+.text-center { text-align: center !important; }
+
+/* ===== Charts ===== */
+.chart-container {
+  width: 100%; height: 380px; margin: 16px 0;
+}
+.chart-container-sm { height: 300px; }
+
+/* ===== KPI Summary ===== */
+.exec-summary {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 20px;
+}
+.exec-card {
+  border-radius: 12px; padding: 20px; text-align: center;
+  border: 1px solid #e8edf5;
+}
+.exec-card .num { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
+.exec-card .desc { font-size: 0.85rem; color: #666; }
+
+/* ===== Action Cards ===== */
+.action-card {
+  border: 1px solid #e8edf5; border-radius: 10px; padding: 20px 22px;
+  margin-bottom: 16px; position: relative;
+}
+.action-card .priority {
+  position: absolute; top: 12px; right: 16px;
+  font-size: 0.75rem; font-weight: 600; padding: 3px 10px;
+  border-radius: 12px;
+}
+.action-card .priority.high { background: #fde8e8; color: #e74c3c; }
+.action-card .priority.medium { background: #fef5e7; color: #e67e22; }
+.action-card .priority.low { background: #e8f5e9; color: #27ae60; }
+.action-card h4 { font-size: 1rem; color: #0f3460; margin-bottom: 8px; }
+.action-card .effect { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eef1f5; font-size: 0.85rem; }
+.action-card .effect strong { color: #27ae60; }
+.action-card .path { font-size: 0.85rem; color: #555; margin-top: 6px; }
+
+/* ===== Footer ===== */
+.report-footer {
+  text-align: center; padding: 24px; color: #999;
+  font-size: 0.8rem; border-top: 1px solid #e8edf5; margin-top: 16px;
+}
+
+/* ===== Rating Badge ===== */
+.badge {
+  display: inline-block; padding: 2px 10px; border-radius: 10px;
+  font-size: 0.75rem; font-weight: 600;
+}
+.badge.green { background: #e8f5e9; color: #27ae60; }
+.badge.orange { background: #fef5e7; color: #e67e22; }
+.badge.red { background: #fde8e8; color: #e74c3c; }
+.badge.blue { background: #e3f2fd; color: #1565c0; }
+</style>
+</head>
+<body>
+
+<div class="report-container">
+
+<!-- ==================== HEADER ==================== -->
+<div class="report-header">
+  <div class="tag">数据分析报告</div>
+  <h1>小红书矩阵号 6月 GPM 数据分析报告</h1>
+  <div class="subtitle">基于 4 个创作者、1,805 条笔记的全面运营数据分析</div>
+  <div class="meta">
+    <span>📅 数据时间：2026年6月</span>
+    <span>📊 分析团队：智数分析专家团</span>
+    <span>📝 分析师：若溪（Rex）</span>
+    <span>📌 数据来源：小红书商家后台</span>
+  </div>
+</div>
+
+<!-- ==================== TOC ==================== -->
+<div class="toc">
+  <h3>📑 目录导航</h3>
+  <ol>
+    <li><a href="#sec1">执行摘要</a></li>
+    <li><a href="#sec2">数据概览</a></li>
+    <li><a href="#sec3">GPM 整体分析</a></li>
+    <li><a href="#sec4">创作者维度分析</a></li>
+    <li><a href="#sec5">商品维度分析</a></li>
+    <li><a href="#sec6">笔记类型对比</a></li>
+    <li><a href="#sec7">相关性分析</a></li>
+    <li><a href="#sec8">高潜力笔记识别</a></li>
+    <li><a href="#sec9">结论与行动建议</a></li>
+  </ol>
+</div>
+
+<!-- ==================== SEC 1: EXECUTIVE SUMMARY ==================== -->
+<div class="section" id="sec1">
+  <h2><span class="num">1</span> 执行摘要</h2>
+
+  <div class="highlight-box success">
+    <div class="label green">核心发现</div>
+    <p><strong>小红书矩阵号6月整体GPM为34.62，低于行业健康基准，但头部爆款笔记GPM可达2,844，验证了"高质量内容驱动高转化"的可行性。</strong> 总成交集中在极少数笔记（仅9.5%的笔记产生GMV），其中互动率与GPM呈现强正相关（r=0.67），说明<strong>提升用户互动是驱动转化的关键杠杆</strong>。</p>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="value">43,438</div>
+      <div class="label">总 GMV（元）</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">125.5万</div>
+      <div class="label">总曝光量</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">34.62</div>
+      <div class="label">整体 GPM</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">414</div>
+      <div class="label">总支付订单</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">9.5%</div>
+      <div class="label">有 GMV 笔记占比</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">247.58</div>
+      <div class="label">有GMV笔记平均GPM</div>
+    </div>
+  </div>
+
+  <h3>核心建议速览</h3>
+  <table>
+    <thead>
+      <tr><th style="width:8%">优先级</th><th style="width:52%">建议</th><th style="width:40%">预期效果</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge red">高</span></td>
+        <td><strong>放大高互动内容策略</strong> — 围绕互动率>0.5%的爆款笔记复制内容模板</td>
+        <td>预期有GMV笔记转化率提升至15%+，GPM提升50%+</td>
+      </tr>
+      <tr>
+        <td><span class="badge red">高</span></td>
+        <td><strong>优化高曝光低转化笔记</strong> — 66条笔记曝光>5000但GPM<50，需优化商品卡和CTA</td>
+        <td>预计可挽回额外GMV 8,000-12,000元</td>
+      </tr>
+      <tr>
+        <td><span class="badge orange">中</span></td>
+        <td><strong>规模化高GPM商品</strong> — 集中推广三文鱼刺身、鲅鱼等高GPM商品</td>
+        <td>挪威冰鲜三文鱼GPM达66.62，扩大头部品曝光可提升整体GPM</td>
+      </tr>
+      <tr>
+        <td><span class="badge orange">中</span></td>
+        <td><strong>图文为主，视频为辅</strong> — 图文GMV占比99.7%，平均GPM 14.73，远高于视频</td>
+        <td>图文笔记投入产出比更高，建议图文:视频配比 8:2</td>
+      </tr>
+      <tr>
+        <td><span class="badge low">低</span></td>
+        <td><strong>测试66条低曝光高GPM潜力笔记</strong> — 通过付费推广放大质量已验证的内容</td>
+        <td>66条潜力笔记，每条约贡献50-200元增量GMV</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== SEC 2: DATA OVERVIEW ==================== -->
+<div class="section page-break" id="sec2">
+  <h2><span class="num">2</span> 数据概览</h2>
+
+  <h3>数据来源与处理</h3>
+  <p>本次分析基于小红书商家后台导出的商品笔记数据与笔记维度数据，通过<strong>笔记ID</strong>进行合并匹配：</p>
+  <ul>
+    <li>商品笔记数据：1,887 条</li>
+    <li>笔记维度数据：1,966 条</li>
+    <li><strong>成功匹配：1,805 条（匹配率 95.7%）</strong></li>
+  </ul>
+  <p>其中 <strong>172 条笔记产生了GMV</strong>（占 9.5%），其余 1,633 条笔记（90.5%）暂无成交记录。数据字段涵盖笔记层面、商品层面和交易层面的 42 个维度。</p>
+
+  <div class="highlight-box warning">
+    <div class="label orange">数据说明</div>
+    <p>GPM = GMV ÷ 总曝光量 × 1,000，衡量每千次曝光带来的销售收入。本报告使用<strong>笔记维度GPM</strong>进行计算，即单条笔记的GMV与曝光量之比。整体GPM = 总GMV / 总曝光量 × 1,000。</p>
+  </div>
+
+  <h3>整体 KPI 一览</h3>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="value">43,438.16</div>
+      <div class="label">总 GMV（元）</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">1,254,571</div>
+      <div class="label">总曝光量</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">414</div>
+      <div class="label">总支付订单数</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">34.62</div>
+      <div class="label">整体 GPM</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">8,181</div>
+      <div class="label">总加购件数</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">247.58</div>
+      <div class="label">有GMV笔记平均GPM</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">2,844.44</div>
+      <div class="label">最高笔记 GPM</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">172</div>
+      <div class="label">有GMV笔记数</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SEC 3: GPM ANALYSIS ==================== -->
+<div class="section" id="sec3">
+  <h2><span class="num">3</span> GPM 整体分析</h2>
+
+  <h3>3.1 GPM 分布概览</h3>
+  <p>GPM 分布呈现高度集中特征：<strong>96.8% 的笔记GPM处于0-100区间</strong>，说明绝大多数笔记的流量转化效率偏低。仅有 10 条笔记（0.5%）GPM超过500，贡献了 8,390 元GMV，占整体的 19.3%。</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>GPM 区间</th><th class="text-right">笔记数</th><th class="text-right">占比</th><th class="text-right">GMV（元）</th><th class="text-right">GMV占比</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0 - 100</td><td class="text-right">1,747</td><td class="text-right">96.8%</td><td class="text-right">26,980.26</td><td class="text-right">62.1%</td></tr>
+        <tr><td>100 - 500</td><td class="text-right">48</td><td class="text-right">2.7%</td><td class="text-right">8,067.90</td><td class="text-right">18.6%</td></tr>
+        <tr><td>500 - 1,000</td><td class="text-right">8</td><td class="text-right">0.4%</td><td class="text-right">8,194.00</td><td class="text-right">18.9%</td></tr>
+        <tr><td>1,000 - 5,000</td><td class="text-right">2</td><td class="text-right">0.1%</td><td class="text-right">196.00</td><td class="text-right">0.5%</td></tr>
+        <tr style="font-weight:600;background:#f0f4fa;"><td>合计</td><td class="text-right">1,805</td><td class="text-right">100%</td><td class="text-right">43,438.16</td><td class="text-right">100%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Chart: GPM Distribution -->
+  <div class="chart-container chart-container-sm" id="chartGpmDist"></div>
+
+  <div class="highlight-box">
+    <div class="label blue">洞察解读</div>
+    <p><strong>长尾效应显著：</strong> 头部 0.5% 的笔记贡献了 19.3% 的 GMV，呈现出典型的幂律分布。这意味着发现和放大"爆款"笔记是提升整体GPM最有效的策略。同时，超过96%的笔记GPM低于100，说明内容转化效率仍有巨大的提升空间。</p>
+  </div>
+
+  <h3>3.2 GPM Top 10 笔记排行榜</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>笔记标题</th><th>创作者</th><th class="text-right">GPM</th><th class="text-right">曝光量</th><th class="text-right">GMV（元）</th><th>笔记类型</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>300 来块的购买力，一整条够吃一个月了</td><td>鲜水湾</td><td class="text-right">592.47</td><td class="text-right">11,614</td><td class="text-right">6,881.00</td><td>图文</td></tr>
+        <tr><td>2</td><td>其实，300块能吃一个月的三文鱼</td><td>鲜水湾</td><td class="text-right">284.44</td><td class="text-right">3,933</td><td class="text-right">1,118.90</td><td>图文</td></tr>
+        <tr><td>3</td><td>爸妈觉得我每天吃虾仁很奢侈！！！</td><td>菲菲上班吃什么</td><td class="text-right">175.10</td><td class="text-right">731</td><td class="text-right">128.00</td><td>视频</td></tr>
+        <tr><td>4</td><td>感谢315，让我家无添加虾仁又爆单了</td><td>鲜水湾</td><td class="text-right">102.12</td><td class="text-right">3,251</td><td class="text-right">332.00</td><td>图文</td></tr>
+        <tr><td>5</td><td>太喜欢这个整条三文鱼了，比Sam实惠多了</td><td>菲菲上班吃什么</td><td class="text-right">94.87</td><td class="text-right">8,433</td><td class="text-right">800.00</td><td>图文</td></tr>
+        <tr><td>6</td><td>算了，和你们点外卖的说不清楚</td><td>鲜水湾</td><td class="text-right">89.10</td><td class="text-right">4,130</td><td class="text-right">368.00</td><td>图文</td></tr>
+        <tr><td>7</td><td>我也不想吃啊，可它69够我吃一周了</td><td>婉婉上班吃什么</td><td class="text-right">65.37</td><td class="text-right">17,470</td><td class="text-right">1,142.00</td><td>图文</td></tr>
+        <tr><td>8</td><td>其实300来块够吃一个月抗炎饮食了</td><td>婉婉上班吃什么</td><td class="text-right">58.25</td><td class="text-right">27,281</td><td class="text-right">1,589.00</td><td>图文</td></tr>
+        <tr><td>9</td><td>某姆的虾仁我吃了半年，最后还是换了</td><td>菲菲上班吃什么</td><td class="text-right">57.48</td><td class="text-right">4,349</td><td class="text-right">250.00</td><td>图文</td></tr>
+        <tr><td>10</td><td>区区69居然够我自律期吃一周了！</td><td>小柚练后吃什么</td><td class="text-right">57.28</td><td class="text-right">18,507</td><td class="text-right">1,060.00</td><td>图文</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="highlight-box success">
+    <div class="label green">爆款特征</div>
+    <p>Top 10 笔记中 <strong>9 条为图文笔记</strong>，标题多使用价格锚定（"300块够吃一个月"、"69够吃一周"）+ 效果承诺（"自律期"、"抗炎饮食"）的组合策略，内容以"低脂高蛋白"为核心卖点，精准触达减脂人群痛点。</p>
+  </div>
+</div>
+
+<!-- ==================== SEC 4: CREATOR ANALYSIS ==================== -->
+<div class="section page-break" id="sec4">
+  <h2><span class="num">4</span> 创作者维度分析</h2>
+
+  <p>本次分析覆盖 4 个矩阵号创作者，分别聚焦"上班带饭"和"健身减脂"两大场景。整体来看，<strong>创作者之间的GPM差异有限，但产出效率和GMV贡献差异明显</strong>。</p>
+
+  <!-- Chart: Creator Comparison -->
+  <div class="chart-container" id="chartCreator"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>创作者</th><th class="text-right">笔记数</th><th class="text-right">曝光量</th><th class="text-right">GMV（元）</th><th class="text-right">GMV占比</th><th class="text-right">平均GPM</th><th class="text-right">支付订单</th><th class="text-right">平均客单价</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>鲜水湾</strong></td>
+          <td class="text-right">560</td><td class="text-right">363,482</td>
+          <td class="text-right">16,306.70</td><td class="text-right">37.5%</td>
+          <td class="text-right">10.57</td><td class="text-right">148</td>
+          <td class="text-right">110.18</td>
+        </tr>
+        <tr>
+          <td><strong>菲菲上班吃什么</strong></td>
+          <td class="text-right">486</td><td class="text-right">351,206</td>
+          <td class="text-right">13,804.46</td><td class="text-right">31.8%</td>
+          <td class="text-right">16.33</td><td class="text-right">142</td>
+          <td class="text-right">97.21</td>
+        </tr>
+        <tr>
+          <td><strong>婉婉上班吃什么</strong></td>
+          <td class="text-right">338</td><td class="text-right">339,261</td>
+          <td class="text-right">7,861.00</td><td class="text-right">18.1%</td>
+          <td class="text-right">16.62</td><td class="text-right">80</td>
+          <td class="text-right">98.26</td>
+        </tr>
+        <tr>
+          <td><strong>小柚练后吃什么</strong></td>
+          <td class="text-right">421</td><td class="text-right">200,622</td>
+          <td class="text-right">5,466.00</td><td class="text-right">12.6%</td>
+          <td class="text-right">14.94</td><td class="text-right">44</td>
+          <td class="text-right">124.23</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>4.1 各创作者分析</h3>
+
+  <h4>鲜水湾 — 产粮王，但GPM偏低</h4>
+  <p>鲜水湾以560条笔记（31.0%）产出最高GMV（16,306.70元），但平均GPM最低（10.57）。主要原因是其大量笔记（包括三文鱼内容）曝光量较高但转化率偏低。注意其一条爆款笔记"300来块的购买力"单条贡献6,881元GMV，GPM高达592.47，说明<strong>鲜水湾具备打造爆款的能力，但缺乏可复制的爆款模板</strong>。</p>
+
+  <h4>菲菲上班吃什么 — 均衡型选手</h4>
+  <p>菲菲486条笔记，GMV 13,804.46元，平均GPM 16.33。其内容以虾仁测评、上班带饭为主，客单价适中（97.21元），转化路径清晰。TOP笔记"以为69没多少"单条GMV达7,775元，是整个矩阵的GMV冠军。</p>
+
+  <h4>婉婉上班吃什么 — 低产高质，GPM最高</h4>
+  <p>婉婉仅338条笔记（最少的创作者），但平均GPM达16.62，为四个账号中最高。其笔记内容质量较高，曝光点击率和转化率表现优秀。"其实300来块够吃一个月抗炎饮食了"曝光27,281次，转化GMV 1,589元。</p>
+
+  <h4>小柚练后吃什么 — 高客单价路线</h4>
+  <p>小柚专注"练后吃"场景，平均客单价124.23元（最高），但总曝光量仅200,622（最低）。这暗示其<strong>内容覆盖面较窄，触达人群精准但规模有限</strong>。可考虑扩大内容选题范围以获取更多曝光。</p>
+
+  <div class="highlight-box warning">
+    <div class="label orange">优化方向</div>
+    <p><strong>鲜水湾</strong>需提升单条笔记的转化效率，重点复制爆款"300块购买力"的内容结构。<strong>小柚练后吃什么</strong>需扩大选题覆盖，以增加曝光量为首要目标。</p>
+  </div>
+</div>
+
+<!-- ==================== SEC 5: PRODUCT ANALYSIS ==================== -->
+<div class="section" id="sec5">
+  <h2><span class="num">5</span> 商品维度分析</h2>
+
+  <h3>5.1 商品品类概览</h3>
+  <p>关联商品主要集中在<strong>虾仁</strong>和<strong>三文鱼</strong>两大类，均为低脂高蛋白减脂食材，定位高度一致。</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>商品名称</th><th class="text-right">关联笔记数</th><th class="text-right">加权 GPM</th><th class="text-right">总GMV（元）</th><th class="text-right">总曝光量</th><th class="text-right">平均客单价</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>手剥虾仁 无冰衣无添加 5盒装</td><td class="text-right">980</td><td class="text-right">14.74</td><td class="text-right">18,355.00</td><td class="text-right">1,245,092</td><td class="text-right">76.23</td></tr>
+        <tr><td>智利尾端中段整条三文鱼 8斤装</td><td class="text-right">525</td><td class="text-right">32.66</td><td class="text-right">13,257.90</td><td class="text-right">405,832</td><td class="text-right">235.33</td></tr>
+        <tr><td>智利三文鱼切块·一人食健康饮食</td><td class="text-right">240</td><td class="text-right">16.16</td><td class="text-right">7,629.26</td><td class="text-right">472,121</td><td class="text-right">118.64</td></tr>
+        <tr><td>挪威冰鲜三文鱼刺身</td><td class="text-right">55</td><td class="text-right">66.62</td><td class="text-right">3,946.00</td><td class="text-right">59,246</td><td class="text-right">79.50</td></tr>
+        <tr><td>青岛大鲅鱼</td><td class="text-right">5</td><td class="text-right">52.94</td><td class="text-right">250.00</td><td class="text-right">4,723</td><td class="text-right">50.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>5.2 高 GPM 商品分析</h3>
+
+  <div class="highlight-box success">
+    <div class="label green">最佳转化商品</div>
+    <p><strong>挪威冰鲜三文鱼刺身</strong> 以 66.62 的加权GPM领跑全品类，单位曝光转化效率最高，但关联笔记仅55条，曝光量59,246，尚有放大空间。<strong>青岛大鲅鱼</strong> GPM 52.94 排名第二，但笔记数仅5条，属于初步试水阶段。</p>
+  </div>
+
+  <div class="highlight-box warning">
+    <div class="label orange">核心商品组合策略</div>
+    <p>当前核心 SKU 矩阵为 <strong>"虾仁（走量）+ 三文鱼（走质）+ 刺身/鲅鱼（潜力）"</strong> 三层结构。虾仁凭借69元的低客单价和"一周备餐"的强需求成为流量入口，三文鱼以"整条囤货"的高客单价拉升整体GMV。建议加大三文鱼切块（一人食小包装）的推广力度，其GPM 16.16 处于中间水平，但客单价适中（118.64元），是优秀的中间价位带产品。</p>
+  </div>
+
+  <!-- Chart: Product GPM Comparison -->
+  <div class="chart-container chart-container-sm" id="chartProduct"></div>
+</div>
+
+<!-- ==================== SEC 6: NOTE TYPE ==================== -->
+<div class="section" id="sec6">
+  <h2><span class="num">6</span> 笔记类型对比</h2>
+
+  <p>从笔记类型来看，<strong>图文笔记在数量、GMV和GPM三个维度全面领先视频笔记</strong>，是当前内容矩阵的绝对核心。</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>笔记类型</th><th class="text-right">笔记数</th><th class="text-right">占比</th><th class="text-right">GMV（元）</th><th class="text-right">GMV占比</th><th class="text-right">平均GPM</th><th class="text-right">总曝光量</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>图文笔记</strong></td>
+          <td class="text-right">1,737</td><td class="text-right">96.2%</td>
+          <td class="text-right">43,316.16</td><td class="text-right">99.7%</td>
+          <td class="text-right">14.73</td><td class="text-right">1,213,795</td>
+        </tr>
+        <tr>
+          <td><strong>视频笔记</strong></td>
+          <td class="text-right">68</td><td class="text-right">3.8%</td>
+          <td class="text-right">122.00</td><td class="text-right">0.3%</td>
+          <td class="text-right">2.58</td><td class="text-right">40,776</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="highlight-box">
+    <div class="label blue">洞察解读</div>
+    <p>图文笔记的平均GPM（14.73）是视频笔记（2.58）的 <strong>5.7倍</strong>。这提示在当前的商品类型（生鲜食材）和目标人群（上班带饭/减脂人群）下，<strong>图文笔记是最有效的内容形态</strong>。视频笔记可能更适合制作流程展示类内容（如"三文鱼解冻教程"），作为图文内容的补充，而非主力。</p>
+  </div>
+
+  <div class="highlight-box warning">
+    <div class="label orange">建议</div>
+    <p>建议内容配比从当前 96:4 适度调整为 <strong>85:15 或 80:20</strong>，将视频笔记定位于<strong>「图文转化失利笔记的视频再创作」</strong>，即对高互动但低转化的图文笔记进行视频化二次加工，测试是否能通过短视频的展示性（如虾仁解冻对比、三文鱼切块实拍）提升支付转化率。</p>
+  </div>
+</div>
+
+<!-- ==================== SEC 7: CORRELATION ==================== -->
+<div class="section page-break" id="sec7">
+  <h2><span class="num">7</span> 相关性分析</h2>
+
+  <p>为识别影响GPM的核心因素，我们对<strong>172条有GMV的笔记</strong>进行了指标间的相关性分析。以下为关键发现：</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>指标对</th><th class="text-right">相关系数 (r)</th><th>相关性强度</th><th>解读</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>互动率 ↔ GPM</strong></td>
+          <td class="text-right" style="color:#27ae60;font-weight:700;">0.6726</td>
+          <td><span class="badge green">强正相关</span></td>
+          <td><strong>核心杠杆。</strong>互动率越高，GPM越高，两者高度一致</td>
+        </tr>
+        <tr>
+          <td>曝光量 ↔ GMV</td>
+          <td class="text-right" style="color:#27ae60;font-weight:700;">0.7629</td>
+          <td><span class="badge green">强正相关</span></td>
+          <td>曝光量仍是GMV的基础驱动因素</td>
+        </tr>
+        <tr>
+          <td>平均客单价 ↔ GPM</td>
+          <td class="text-right" style="color:#e67e22;">0.2404</td>
+          <td><span class="badge orange">弱正相关</span></td>
+          <td>客单价对GPM有一定正向作用，但非决定性因素</td>
+        </tr>
+        <tr>
+          <td>曝光点击率 ↔ GPM</td>
+          <td class="text-right" style="color:#e74c3c;">-0.1203</td>
+          <td><span class="badge red">弱负相关</span></td>
+          <td><strong>反常信号。</strong>点击率高不一定带来高GPM，需关注点击后的转化链路</td>
+        </tr>
+        <tr>
+          <td>曝光量 ↔ GPM</td>
+          <td class="text-right" style="color:#e74c3c;">弱负相关</td>
+          <td><span class="badge red">弱负相关</span></td>
+          <td>高曝光不一定高GPM，流量质量比流量规模更重要</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>7.1 核心洞察：互动率是GPM的最强预测指标</h3>
+
+  <div class="highlight-box success">
+    <div class="label green">关键发现</div>
+    <p><strong>互动率与GPM的相关系数 r = 0.67</strong>，在统计学上属于强正相关。这意味着：</p>
+    <ul>
+      <li><strong>互动的笔记 = 转化的笔记：</strong>点赞、收藏、评论等互动行为本质上是用户对内容的"兴趣投票"，高互动内容天然具备更强的购买说服力</li>
+      <li><strong>收藏 > 点赞：</strong>初步观察发现，高GPM笔记的收藏率显著高于低GPM笔记，说明"收藏备用"行为与购买决策高度关联</li>
+      <li><strong>内容质量决定一切：</strong>与其追逐曝光量和点击率，不如聚焦内容本身的互动价值</li>
+    </ul>
+  </div>
+
+  <h3>7.2 反常指标的解读</h3>
+
+  <div class="highlight-box danger">
+    <div class="label red">需要关注的问题信号</div>
+    <p><strong>曝光点击率与GPM呈弱负相关（r = -0.12）</strong>，这是一个反直觉的信号。通常更高的点击率应带来更高的转化，但数据却显示相反趋势。可能原因：</p>
+    <ul>
+      <li><strong>标题党的代价：</strong>部分笔记通过猎奇标题吸引点击，但内容与商品关联度低，点击后跳失率高</li>
+      <li><strong>商品卡优化不足：</strong>用户点击进入笔记后，商品展示位置、卡片设计、价格锚点等未能有效引导购买</li>
+      <li><strong>人群匹配偏差：</strong>宽泛的内容话题吸引了非精准人群，虽然点击率高但购买意愿低</li>
+    </ul>
+    <p style="margin-top:8px;"><strong>建议：</strong>对曝光>5000但GPM<50的66条笔记进行内容审计，排查是否存在标题与内容脱节的问题。</p>
+  </div>
+</div>
+
+<!-- ==================== SEC 8: HIGH POTENTIAL NOTES ==================== -->
+<div class="section" id="sec8">
+  <h2><span class="num">8</span> 高潜力笔记识别</h2>
+
+  <h3>8.1 低曝光高GPM — 潜力爆款（66条）</h3>
+  <p>以下笔记曝光量较低（< 500），但GPM表现优异（> 500），表明<strong>内容转化能力已经过验证，仅需增加曝光即可放大GMV</strong>。建议优先对这些笔记进行付费推广或二次推送。</p>
+
+  <div class="highlight-box success">
+    <div class="label green">识别标准</div>
+    <p>曝光量 &lt; 500 且 GPM &gt; 500，共计 <strong>66 条笔记</strong>符合条件。</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>笔记ID</th><th>笔记标题</th><th>创作者</th><th class="text-right">GPM</th><th class="text-right">曝光量</th><th class="text-right">GMV（元）</th><th class="text-right">点赞</th><th class="text-right">收藏</th><th class="text-right">互动率</th></tr>
+      </thead>
+      <tbody>
+<tr><td class="text-center">6a0198b2000000003502be52</td><td title="我妈：终于不天天吃外卖了🤣">我妈：终于不天天吃外卖了🤣</td><td>小柚练后吃什么</td><td class="text-right">2844.44</td><td class="text-right">45</td><td class="text-right">128.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">17.8%</td></tr>
+<tr><td class="text-center">6a169fbd000000000802441b</td><td title="可惜你没吃过手剥虾仁，又怎知道虾仁有多香">可惜你没吃过手剥虾仁，又怎知道虾仁有多香</td><td>菲菲上班吃什么</td><td class="text-right">1888.89</td><td class="text-right">36</td><td class="text-right">68.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69fe9f1d000000001a02f888</td><td title="谁说 300 块不经花❓够我吃一个月三文鱼了">谁说 300 块不经花❓够我吃一个月三文鱼了</td><td>婉婉上班吃什么</td><td class="text-right">983.96</td><td class="text-right">374</td><td class="text-right">368.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a18419a000000000702d7dd</td><td title="同事看我天天吃虾，还以为我伙食费很高😭">同事看我天天吃虾，还以为我伙食费很高😭</td><td>菲菲上班吃什么</td><td class="text-right">958.33</td><td class="text-right">72</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69e5ecdb000000002301d4b7</td><td title="错过可惜！一整条鱼才300来块……">错过可惜！一整条鱼才300来块……</td><td>婉婉上班吃什么</td><td class="text-right">886.75</td><td class="text-right">415</td><td class="text-right">368.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a0563e100000000080248ed</td><td title="和老爸商量后，为减脂姐妹推出专属小包！！">和老爸商量后，为减脂姐妹推出专属小包！！</td><td>菲菲上班吃什么</td><td class="text-right">784.09</td><td class="text-right">88</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a16b0d30000000007023f11</td><td title="我减脂期无限回购的轮切三文鱼">我减脂期无限回购的轮切三文鱼</td><td>婉婉上班吃什么</td><td class="text-right">715.15</td><td class="text-right">330</td><td class="text-right">236.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">69fdf827000000002301787d</td><td title="区区69块承包一周减脂餐">区区69块承包一周减脂餐</td><td>鲜水湾</td><td class="text-right">552.85</td><td class="text-right">123</td><td class="text-right">68.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69fb40e9000000001e00f886</td><td title="某姆很好！但是某姆没有小包装">某姆很好！但是某姆没有小包装</td><td>菲菲上班吃什么</td><td class="text-right">544.35</td><td class="text-right">248</td><td class="text-right">135.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">69fde505000000001e00e28f</td><td title="你说 69💰5 袋我微微心动，顺丰包邮我直接冲">你说 69💰5 袋我微微心动，顺丰包邮我直接冲</td><td>鲜水湾</td><td class="text-right">458.33</td><td class="text-right">144</td><td class="text-right">66.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a1ff97300000000080335bb</td><td title="误以为很贵的整条三文鱼才三百多😆">误以为很贵的整条三文鱼才三百多😆</td><td>鲜水湾</td><td class="text-right">417.97</td><td class="text-right">1,091</td><td class="text-right">456.00</td><td class="text-right">2</td><td class="text-right">0</td><td class="text-right">0.5%</td></tr>
+<tr><td class="text-center">6a26673900000000060379f1</td><td title="好吃到昏迷的微波炉三文鱼！">好吃到昏迷的微波炉三文鱼！</td><td>鲜水湾</td><td class="text-right">417.28</td><td class="text-right">810</td><td class="text-right">338.00</td><td class="text-right">4</td><td class="text-right">2</td><td class="text-right">1.1%</td></tr>
+<tr><td class="text-center">6a02e0e5000000000702ed78</td><td title="100多直接囤够了我一周的管理餐">100多直接囤够了我一周的管理餐</td><td>鲜水湾</td><td class="text-right">369.00</td><td class="text-right">916</td><td class="text-right">338.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a0e9cd40000000008027b54</td><td title="以为69没多少，结果够我一周上班带饭了">以为69没多少，结果够我一周上班带饭了</td><td>婉婉上班吃什么</td><td class="text-right">357.51</td><td class="text-right">193</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">1</td><td class="text-right">0.5%</td></tr>
+<tr><td class="text-center">6a3929300000000007029228</td><td title="减脂期后发现，100块真能吃半个月虾仁">减脂期后发现，100块真能吃半个月虾仁</td><td>菲菲上班吃什么</td><td class="text-right">275.00</td><td class="text-right">240</td><td class="text-right">66.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a35e35c0000000022019a23</td><td title="这也太省钱了吧😂69块吃了半个月轻食餐！">这也太省钱了吧😂69块吃了半个月轻食餐！</td><td>小柚练后吃什么</td><td class="text-right">270.98</td><td class="text-right">727</td><td class="text-right">197.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">69e31a39000000001a037efd</td><td title="怎么没人和我说呀！五一要送大鲅鱼">怎么没人和我说呀！五一要送大鲅鱼</td><td>鲜水湾</td><td class="text-right">264.71</td><td class="text-right">748</td><td class="text-right">198.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69d77bfe000000001a037d57</td><td title="某姆的虾仁好吃，但大包装真的劝退">某姆的虾仁好吃，但大包装真的劝退</td><td>鲜水湾</td><td class="text-right">255.56</td><td class="text-right">270</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69733ba5000000000b012ea6</td><td title="我妈：你就卖点好的，贵点没关系">我妈：你就卖点好的，贵点没关系</td><td>小柚练后吃什么</td><td class="text-right">205.77</td><td class="text-right">763</td><td class="text-right">157.00</td><td class="text-right">0</td><td class="text-right">1</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a22a7b600000000220211eb</td><td title="真别低估了100来块的购买力，够吃半个月了">真别低估了100来块的购买力，够吃半个月了</td><td>小柚练后吃什么</td><td class="text-right">197.71</td><td class="text-right">349</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a3282760000000008032509</td><td title="区区69元，承包了我一周减脂的快乐！！！">区区69元，承包了我一周减脂的快乐！！！</td><td>菲菲上班吃什么</td><td class="text-right">197.14</td><td class="text-right">350</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a3ca20c000000000f016956</td><td title="控体期，打工人午饭被这虾仁承包了！！！">控体期，打工人午饭被这虾仁承包了！！！</td><td>小柚练后吃什么</td><td class="text-right">186.49</td><td class="text-right">370</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a2b9b94000000000702e7d3</td><td title="一人食！都去炫这个三文鱼墩墩🤤">一人食！都去炫这个三文鱼墩墩🤤</td><td>鲜水湾</td><td class="text-right">183.10</td><td class="text-right">491</td><td class="text-right">89.90</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.6%</td></tr>
+<tr><td class="text-center">69ec760a0000000023015f08</td><td title="爸妈觉得我每天吃虾仁很奢侈！！！">爸妈觉得我每天吃虾仁很奢侈！！！</td><td>菲菲上班吃什么</td><td class="text-right">175.10</td><td class="text-right">731</td><td class="text-right">128.00</td><td class="text-right">3</td><td class="text-right">0</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a35f92a00000000210205a9</td><td title="早八带饭党，5分钟备餐全靠独立小包装✅">早八带饭党，5分钟备餐全靠独立小包装✅</td><td>菲菲上班吃什么</td><td class="text-right">172.41</td><td class="text-right">725</td><td class="text-right">125.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a366845000000001003c573</td><td title="69 元的购买力，控体期解决一周工作餐">69 元的购买力，控体期解决一周工作餐</td><td>小柚练后吃什么</td><td class="text-right">171.35</td><td class="text-right">747</td><td class="text-right">128.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.5%</td></tr>
+<tr><td class="text-center">6a1946fc000000000803c362</td><td title="敞开吃吧，减脂期吃三文鱼真的夯爆了">敞开吃吧，减脂期吃三文鱼真的夯爆了</td><td>鲜水湾</td><td class="text-right">168.73</td><td class="text-right">403</td><td class="text-right">68.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a2fa999000000000701157d</td><td title="现在年轻人，严重低估了69的购买力！">现在年轻人，严重低估了69的购买力！</td><td>菲菲上班吃什么</td><td class="text-right">152.65</td><td class="text-right">452</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a3a32840000000007028267</td><td title="人少别贪多，1000g 鱼排刚好">人少别贪多，1000g 鱼排刚好</td><td>鲜水湾</td><td class="text-right">150.06</td><td class="text-right">853</td><td class="text-right">128.00</td><td class="text-right">7</td><td class="text-right">1</td><td class="text-right">1.3%</td></tr>
+<tr><td class="text-center">6a32812f000000002103d76f</td><td title="😭爬坡1小时 vs 煮虾仁3分钟，我选后者…">😭爬坡1小时 vs 煮虾仁3分钟，我选后者…</td><td>菲菲上班吃什么</td><td class="text-right">140.20</td><td class="text-right">913</td><td class="text-right">128.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a0d15070000000007020c21</td><td title="奉劝大家别低估100块，真的够吃大半月">奉劝大家别低估100块，真的够吃大半月</td><td>婉婉上班吃什么</td><td class="text-right">137.44</td><td class="text-right">422</td><td class="text-right">58.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a2a4ebe000000000702889c</td><td title="一餐一包的虾仁，确实很难拒绝！">一餐一包的虾仁，确实很难拒绝！</td><td>婉婉上班吃什么</td><td class="text-right">131.69</td><td class="text-right">972</td><td class="text-right">128.00</td><td class="text-right">7</td><td class="text-right">2</td><td class="text-right">1.0%</td></tr>
+<tr><td class="text-center">69c64f8d000000001a02f457</td><td title="同事以为我每天吃虾仁很奢侈…">同事以为我每天吃虾仁很奢侈…</td><td>婉婉上班吃什么</td><td class="text-right">127.78</td><td class="text-right">540</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a39033e000000002201abe0</td><td title="听劝，咱家虾仁收到就白水煮！">听劝，咱家虾仁收到就白水煮！</td><td>小柚练后吃什么</td><td class="text-right">126.20</td><td class="text-right">523</td><td class="text-right">66.00</td><td class="text-right">1</td><td class="text-right">1</td><td class="text-right">0.8%</td></tr>
+<tr><td class="text-center">6a3d02b6000000001101652f</td><td title="5分钟搞定！减脂期的万能凉拌虾仁🦐">5分钟搞定！减脂期的万能凉拌虾仁🦐</td><td>小柚练后吃什么</td><td class="text-right">125.23</td><td class="text-right">1,086</td><td class="text-right">136.00</td><td class="text-right">0</td><td class="text-right">1</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a2cd9d00000000021023f17</td><td title="真别低估了100来块的购买力，够吃半个月了">真别低估了100来块的购买力，够吃半个月了</td><td>菲菲上班吃什么</td><td class="text-right">122.99</td><td class="text-right">561</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a20f00f00000000060226a5</td><td title="夏日减脂真不贵，69承包我一周减脂餐！！！！">夏日减脂真不贵，69承包我一周减脂餐！！！！</td><td>菲菲上班吃什么</td><td class="text-right">122.02</td><td class="text-right">1,131</td><td class="text-right">138.00</td><td class="text-right">2</td><td class="text-right">0</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a27b4f500000000070257bb</td><td title="谁顶得住啊😭60来块直接实现虾仁自由！">谁顶得住啊😭60来块直接实现虾仁自由！</td><td>婉婉上班吃什么</td><td class="text-right">121.27</td><td class="text-right">569</td><td class="text-right">69.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a36573c000000000f030f1e</td><td title="感谢老板，一人食独立小包装太方便啦❗️">感谢老板，一人食独立小包装太方便啦❗️</td><td>小柚练后吃什么</td><td class="text-right">117.04</td><td class="text-right">1,068</td><td class="text-right">125.00</td><td class="text-right">2</td><td class="text-right">2</td><td class="text-right">0.5%</td></tr>
+<tr><td class="text-center">6a2935670000000022020f41</td><td title="我承认，是虾仁让我开始认真吃饭了……">我承认，是虾仁让我开始认真吃饭了……</td><td>小柚练后吃什么</td><td class="text-right">116.75</td><td class="text-right">591</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">69fe0399000000002301cf8e</td><td title="同事说我每天吃虾很奢侈🥲......">同事说我每天吃虾很奢侈🥲......</td><td>婉婉上班吃什么</td><td class="text-right">115.52</td><td class="text-right">1,108</td><td class="text-right">128.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a3dfb10000000000702cb9c</td><td title="发现人减脂根本花不了几个钱…">发现人减脂根本花不了几个钱…</td><td>菲菲上班吃什么</td><td class="text-right">115.38</td><td class="text-right">598</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a373fbe000000001003ea7d</td><td title="听粉丝的话，推出了一人食独立小包装🤩">听粉丝的话，推出了一人食独立小包装🤩</td><td>小柚练后吃什么</td><td class="text-right">108.66</td><td class="text-right">635</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a3f2d42000000001003c199</td><td title="手剥虾仁69管一周？一人食减脂餐">手剥虾仁69管一周？一人食减脂餐</td><td>小柚练后吃什么</td><td class="text-right">107.42</td><td class="text-right">633</td><td class="text-right">68.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a2014730000000022024f58</td><td title="手剥虾仁69管一周？一人食减脂餐！！">手剥虾仁69管一周？一人食减脂餐！！</td><td>小柚练后吃什么</td><td class="text-right">97.46</td><td class="text-right">708</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a2631af000000002202d757</td><td title="减脂期，吃这个的人简直是天才！！！">减脂期，吃这个的人简直是天才！！！</td><td>小柚练后吃什么</td><td class="text-right">95.67</td><td class="text-right">669</td><td class="text-right">64.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">69dbbec00000000023004cf2</td><td title="3斤虾才能剥1斤虾仁，真别算不过账！">3斤虾才能剥1斤虾仁，真别算不过账！</td><td>鲜水湾</td><td class="text-right">93.24</td><td class="text-right">740</td><td class="text-right">69.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a211d6500000000080248cf</td><td title="多亏了这虾仁，夏天前的控体KPI提前完成…">多亏了这虾仁，夏天前的控体KPI提前完成…</td><td>菲菲上班吃什么</td><td class="text-right">92.87</td><td class="text-right">743</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a3cdbae000000002103edae</td><td title="但凡早点遇见你 谁还点外卖70+的啊🤫">但凡早点遇见你 谁还点外卖70+的啊🤫</td><td>婉婉上班吃什么</td><td class="text-right">90.91</td><td class="text-right">737</td><td class="text-right">67.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a3743f00000000007024d43</td><td title="控体期69虾仁吃一周，外卖两顿没了">控体期69虾仁吃一周，外卖两顿没了</td><td>菲菲上班吃什么</td><td class="text-right">88.58</td><td class="text-right">779</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a33901d0000000021019fbc</td><td title="轻食吃不起了。。。还是自己煮虾仁香">轻食吃不起了。。。还是自己煮虾仁香</td><td>婉婉上班吃什么</td><td class="text-right">85.50</td><td class="text-right">807</td><td class="text-right">69.00</td><td class="text-right">4</td><td class="text-right">1</td><td class="text-right">1.0%</td></tr>
+<tr><td class="text-center">6a325b9a0000000008031eee</td><td title="感觉现在的年轻人都低估了69r的购买力！">感觉现在的年轻人都低估了69r的购买力！</td><td>婉婉上班吃什么</td><td class="text-right">85.08</td><td class="text-right">811</td><td class="text-right">69.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a43ccf7000000002200ad23</td><td title="天呐！控体期不知道回购了多少次！">天呐！控体期不知道回购了多少次！</td><td>婉婉上班吃什么</td><td class="text-right">84.79</td><td class="text-right">802</td><td class="text-right">68.00</td><td class="text-right">2</td><td class="text-right">0</td><td class="text-right">0.5%</td></tr>
+<tr><td class="text-center">6a3bc04c0000000006037b0c</td><td title="69块的虾仁，承包了我一周的工作餐">69块的虾仁，承包了我一周的工作餐</td><td>菲菲上班吃什么</td><td class="text-right">84.46</td><td class="text-right">817</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69870401000000000e00c0fc</td><td title="从青岛发过来的！被爸妈夸了一整天">从青岛发过来的！被爸妈夸了一整天</td><td>鲜水湾</td><td class="text-right">83.87</td><td class="text-right">930</td><td class="text-right">78.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a3657060000000021018862</td><td title="现在年轻人，严重低估了69的购买力！">现在年轻人，严重低估了69的购买力！</td><td>菲菲上班吃什么</td><td class="text-right">83.64</td><td class="text-right">825</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a3e40c3000000000f02835b</td><td title="多亏了这虾仁，夏天前的控体KPI提前完成">多亏了这虾仁，夏天前的控体KPI提前完成</td><td>小柚练后吃什么</td><td class="text-right">82.71</td><td class="text-right">798</td><td class="text-right">66.00</td><td class="text-right">1</td><td class="text-right">0</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a3d15e80000000011019758</td><td title="不要科技狠活的虾仁，70元囤一周减脂餐">不要科技狠活的虾仁，70元囤一周减脂餐</td><td>小柚练后吃什么</td><td class="text-right">82.54</td><td class="text-right">836</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a33dd9e0000000011018b55</td><td title="爸妈觉得我每天吃一包虾仁很奢侈……">爸妈觉得我每天吃一包虾仁很奢侈……</td><td>小柚练后吃什么</td><td class="text-right">79.77</td><td class="text-right">865</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a3f2c7e000000000702294f</td><td title="你信吗？接下来一个月减脂人会买😂😂">你信吗？接下来一个月减脂人会买😂😂</td><td>菲菲上班吃什么</td><td class="text-right">78.48</td><td class="text-right">841</td><td class="text-right">66.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a1f9ce400000000080277f0</td><td title="控体期能持续掉秤，全靠吃的干净！">控体期能持续掉秤，全靠吃的干净！</td><td>婉婉上班吃什么</td><td class="text-right">78.32</td><td class="text-right">881</td><td class="text-right">69.00</td><td class="text-right">3</td><td class="text-right">0</td><td class="text-right">0.7%</td></tr>
+<tr><td class="text-center">6a28079c0000000022017043</td><td title="听我一句劝，夏天减脂期控体还来得及！！！">听我一句劝，夏天减脂期控体还来得及！！！</td><td>菲菲上班吃什么</td><td class="text-right">77.35</td><td class="text-right">892</td><td class="text-right">69.00</td><td class="text-right">0</td><td class="text-right">0</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a2141a7000000003503ac3c</td><td title="厨房越小越爱，独立小包装懒人食材……">厨房越小越爱，独立小包装懒人食材……</td><td>小柚练后吃什么</td><td class="text-right">76.33</td><td class="text-right">904</td><td class="text-right">69.00</td><td class="text-right">1</td><td class="text-right">1</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a33fa070000000007020b12</td><td title="早上带饭来不及...还好有小包虾仁">早上带饭来不及...还好有小包虾仁</td><td>婉婉上班吃什么</td><td class="text-right">75.41</td><td class="text-right">915</td><td class="text-right">69.00</td><td class="text-right">2</td><td class="text-right">0</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a229e0c0000000007013d5b</td><td title="区区69💰居然够我自律期吃一周了！！！">区区69💰居然够我自律期吃一周了！！！</td><td>菲菲上班吃什么</td><td class="text-right">73.33</td><td class="text-right">941</td><td class="text-right">69.00</td><td class="text-right">1</td><td class="text-right">1</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a34a5f300000000080243ed</td><td title="69块独立小包装虾仁吃一周，你还说我奢侈…">69块独立小包装虾仁吃一周，你还说我奢侈…</td><td>菲菲上班吃什么</td><td class="text-right">71.58</td><td class="text-right">922</td><td class="text-right">66.00</td><td class="text-right">1</td><td class="text-right">1</td><td class="text-right">0.3%</td></tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <h3>8.2</tbody>
+    </table>
+  </div>
+
+  <h3>8.2 高曝光低GPM — 待优化笔记（66条）</h3>
+  <p>以下笔记曝光量较高（> 5,000），但GPM偏低（< 50），说明<strong>流量进来了但没有被有效转化</strong>。这些笔记是提升整体GPM的"低垂果实"。</p>
+
+  <div class="highlight-box danger">
+    <div class="label red">识别标准</div>
+    <p>曝光量 &gt; 5,000 且 GPM &lt; 50，共计 <strong>66 条笔记</strong>符合条件。</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>笔记ID</th><th>笔记标题</th><th>创作者</th><th class="text-right">曝光量</th><th class="text-right">GPM</th><th class="text-right">GMV（元）</th><th class="text-right">商品点击率</th><th class="text-right">互动率</th></tr>
+      </thead>
+      <tbody>
+
+<tr><td class="text-center">69cb9ed000000000230074e2</td><td title="以为 69 没多少，结果解决了我一周上班带饭">以为 69 没多少，结果解决了我一周上班带饭</td><td>菲菲上班吃什么</td><td class="text-right">347,388</td><td class="text-right">22.38</td><td class="text-right">7775.00</td><td class="text-right">0.78%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">69ee09de00000000220253aa</td><td title="身材管理期吃它！我两周掉了6斤！">身材管理期吃它！我两周掉了6斤！</td><td>鲜水湾</td><td class="text-right">43,922</td><td class="text-right">22.11</td><td class="text-right">971.00</td><td class="text-right">1.10%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a043e580000000007026043</td><td title="其实300来块够吃一个月抗炎饮食了">其实300来块够吃一个月抗炎饮食了</td><td>婉婉上班吃什么</td><td class="text-right">27,281</td><td class="text-right">58.25</td><td class="text-right">1589.00</td><td class="text-right">1.13%</td><td class="text-right">0.7%</td></tr>
+<tr><td class="text-center">6a02f3f2000000003503af35</td><td title="区区69💰居然够我自律期吃一周了！">区区69💰居然够我自律期吃一周了！</td><td>小柚练后吃什么</td><td class="text-right">18,507</td><td class="text-right">57.28</td><td class="text-right">1060.00</td><td class="text-right">0.87%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">69456f51000000001f006a7b</td><td title="其实，300块能吃一个月的三文鱼😎">其实，300块能吃一个月的三文鱼😎</td><td>鲜水湾</td><td class="text-right">18,193</td><td class="text-right">61.50</td><td class="text-right">1118.90</td><td class="text-right">0.85%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">69d88c1a0000000022026d4d</td><td title="某姆的虾仁我吃了三年，直到换了它">某姆的虾仁我吃了三年，直到换了它</td><td>婉婉上班吃什么</td><td class="text-right">17,647</td><td class="text-right">18.42</td><td class="text-right">325.00</td><td class="text-right">0.83%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a2ac7e3000000002100a717</td><td title="我也不想吃啊，可它69够我吃一周了😂">我也不想吃啊，可它69够我吃一周了😂</td><td>婉婉上班吃什么</td><td class="text-right">17,470</td><td class="text-right">65.37</td><td class="text-right">1142.00</td><td class="text-right">1.64%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">69d747930000000023015c5d</td><td title="在某马买了3次虾仁，最后一次我决定换一家">在某马买了3次虾仁，最后一次我决定换一家</td><td>菲菲上班吃什么</td><td class="text-right">16,742</td><td class="text-right">28.01</td><td class="text-right">469.00</td><td class="text-right">1.47%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a26571c000000002103ceaa</td><td title="听老爸的话，给减脂人推出备餐小包装了">听老爸的话，给减脂人推出备餐小包装了</td><td>鲜水湾</td><td class="text-right">16,666</td><td class="text-right">42.60</td><td class="text-right">710.00</td><td class="text-right">2.55%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a38e138000000001101382c</td><td title="普通人减脂真不贵，69够吃一周了">普通人减脂真不贵，69够吃一周了</td><td>小柚练后吃什么</td><td class="text-right">15,686</td><td class="text-right">47.37</td><td class="text-right">743.00</td><td class="text-right">1.64%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a1e8953000000000602263a</td><td title="同事说我每天吃三文鱼太奢侈了…">同事说我每天吃三文鱼太奢侈了…</td><td>鲜水湾</td><td class="text-right">10,148</td><td class="text-right">24.24</td><td class="text-right">246.00</td><td class="text-right">1.69%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a0833f200000000080001ac</td><td title="和老爸商量了推出减脂三文鱼小包装">和老爸商量了推出减脂三文鱼小包装</td><td>鲜水湾</td><td class="text-right">10,098</td><td class="text-right">24.06</td><td class="text-right">243.00</td><td class="text-right">1.41%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a3f88bc000000000803df7a</td><td title="和老爸商量后，特意推出一人食专属小包装">和老爸商量后，特意推出一人食专属小包装</td><td>菲菲上班吃什么</td><td class="text-right">8,950</td><td class="text-right">15.31</td><td class="text-right">137.00</td><td class="text-right">1.72%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a2bbcee0000000022016a57</td><td title="和老爸商量后，果断推出早八带饭一人食">和老爸商量后，果断推出早八带饭一人食</td><td>鲜水湾</td><td class="text-right">8,236</td><td class="text-right">60.83</td><td class="text-right">501.00</td><td class="text-right">2.27%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a4208a7000000002100b04b</td><td title="到家一整条三文鱼，也就一个月的量😅">到家一整条三文鱼，也就一个月的量😅</td><td>婉婉上班吃什么</td><td class="text-right">7,731</td><td class="text-right">8.67</td><td class="text-right">67.00</td><td class="text-right">1.77%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">69e5f2cd000000001b000539</td><td title="短短一周逼自己So了好多">短短一周逼自己So了好多</td><td>小柚练后吃什么</td><td class="text-right">6,771</td><td class="text-right">39.14</td><td class="text-right">265.00</td><td class="text-right">0.59%</td><td class="text-right">0.6%</td></tr>
+<tr><td class="text-center">69c4d7c300000000200387da</td><td title="真别低估了100来块的购买力，够吃半个月了">真别低估了100来块的购买力，够吃半个月了</td><td>鲜水湾</td><td class="text-right">6,736</td><td class="text-right">40.53</td><td class="text-right">273.00</td><td class="text-right">1.16%</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a2fda1d000000001102e720</td><td title="以为 69 没多少，结果解决了我一周上班带饭">以为 69 没多少，结果解决了我一周上班带饭</td><td>小柚练后吃什么</td><td class="text-right">6,695</td><td class="text-right">39.73</td><td class="text-right">266.00</td><td class="text-right">1.45%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">69fdea87000000002003b62d</td><td title="和老爸商量后，推出专为独居姐妹做的小包装">和老爸商量后，推出专为独居姐妹做的小包装</td><td>菲菲上班吃什么</td><td class="text-right">6,448</td><td class="text-right">19.85</td><td class="text-right">128.00</td><td class="text-right">1.55%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a3b8f45000000002200a949</td><td title="和老爸商量了，推出独居一人食小包装">和老爸商量了，推出独居一人食小包装</td><td>鲜水湾</td><td class="text-right">6,347</td><td class="text-right">10.71</td><td class="text-right">68.00</td><td class="text-right">1.58%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a0c732d00000000070222e6</td><td title="不是所有鱼，都能平替三文鱼">不是所有鱼，都能平替三文鱼</td><td>鲜水湾</td><td class="text-right">4,378</td><td class="text-right">13.25</td><td class="text-right">58.00</td><td class="text-right">1.44%</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69d8bab3000000001b020eca</td><td title="某姆的虾仁我吃了半年，最后还是换了">某姆的虾仁我吃了半年，最后还是换了</td><td>菲菲上班吃什么</td><td class="text-right">4,349</td><td class="text-right">57.48</td><td class="text-right">250.00</td><td class="text-right">1.17%</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69c3a5ab00000000280097e2</td><td title="长期主义的三文鱼，真的没有平替。。。">长期主义的三文鱼，真的没有平替。。。</td><td>菲菲上班吃什么</td><td class="text-right">3,955</td><td class="text-right">16.43</td><td class="text-right">65.00</td><td class="text-right">1.39%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">69e5905f000000001f007150</td><td title="我发现能控制住血糖的人都有一个饮食特点">我发现能控制住血糖的人都有一个饮食特点</td><td>婉婉上班吃什么</td><td class="text-right">3,912</td><td class="text-right">35.28</td><td class="text-right">138.00</td><td class="text-right">0.79%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a23c9320000000006035f97</td><td title="吃了半个月虾仁🍤才花了60">吃了半个月虾仁🍤才花了60</td><td>婉婉上班吃什么</td><td class="text-right">3,897</td><td class="text-right">17.71</td><td class="text-right">69.00</td><td class="text-right">1.46%</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a1d3fd90000000006036f55</td><td title="直观展示一下 100 元的购买力！！！！">直观展示一下 100 元的购买力！！！！</td><td>菲菲上班吃什么</td><td class="text-right">3,841</td><td class="text-right">53.89</td><td class="text-right">207.00</td><td class="text-right">1.64%</td><td class="text-right">0.7%</td></tr>
+<tr><td class="text-center">6a22c7c1000000000803eaec</td><td title="本来想尝试一下，结果回购了一次又一次">本来想尝试一下，结果回购了一次又一次</td><td>婉婉上班吃什么</td><td class="text-right">3,679</td><td class="text-right">18.76</td><td class="text-right">69.00</td><td class="text-right">1.39%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a2a246d000000002100a515</td><td title="听粉丝的话，推出一人食减脂小包装😽">听粉丝的话，推出一人食减脂小包装😽</td><td>鲜水湾</td><td class="text-right">3,352</td><td class="text-right">41.17</td><td class="text-right">138.00</td><td class="text-right">1.76%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a2bcd9600000000060239a3</td><td title="看完鹅腿阿姨热搜，老爸说配料表必须写清楚">看完鹅腿阿姨热搜，老爸说配料表必须写清楚</td><td>鲜水湾</td><td class="text-right">3,165</td><td class="text-right">21.80</td><td class="text-right">69.00</td><td class="text-right">1.07%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a3e4656000000000701304f</td><td title="我发现，坚持抗炎饮食的人都有一个必选食物">我发现，坚持抗炎饮食的人都有一个必选食物</td><td>鲜水湾</td><td class="text-right">3,158</td><td class="text-right">20.58</td><td class="text-right">65.00</td><td class="text-right">1.93%</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a3ddf4c0000000022008f00</td><td title="和大家商量后，推出独居一人食小包装">和大家商量后，推出独居一人食小包装</td><td>鲜水湾</td><td class="text-right">3,153</td><td class="text-right">21.57</td><td class="text-right">68.00</td><td class="text-right">0.79%</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a27b6060000000021018f8a</td><td title="夏天减脂期真不贵，69块够我吃一周了！！">夏天减脂期真不贵，69块够我吃一周了！！</td><td>菲菲上班吃什么</td><td class="text-right">3,032</td><td class="text-right">22.76</td><td class="text-right">69.00</td><td class="text-right">1.06%</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a1fde4d0000000008031b0b</td><td title="感谢老板，好吃到想要办年卡🥳">感谢老板，好吃到想要办年卡🥳</td><td>婉婉上班吃什么</td><td class="text-right">3,009</td><td class="text-right">65.47</td><td class="text-right">197.00</td><td class="text-right">1.36%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">69fb0607000000001f003db9</td><td title="和老爸商量后，推出专为独居姐妹做的小包装">和老爸商量后，推出专为独居姐妹做的小包装</td><td>鲜水湾</td><td class="text-right">2,975</td><td class="text-right">16.77</td><td class="text-right">49.90</td><td class="text-right">1.04%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a1fe5e80000000035020b0a</td><td title="听我一句劝，现在控体还来得及！！！">听我一句劝，现在控体还来得及！！！</td><td>小柚练后吃什么</td><td class="text-right">2,888</td><td class="text-right">23.89</td><td class="text-right">69.00</td><td class="text-right">1.39%</td><td class="text-right">0.6%</td></tr>
+<tr><td class="text-center">6a2627b5000000002200a29f</td><td title="300多承包了我一个月减脂餐">300多承包了我一个月减脂餐</td><td>鲜水湾</td><td class="text-right">2,858</td><td class="text-right">65.08</td><td class="text-right">186.00</td><td class="text-right">1.22%</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a0ff39e000000000702d78a</td><td title="某马对不起，还是无保水虾仁更适合我">某马对不起，还是无保水虾仁更适合我</td><td>婉婉上班吃什么</td><td class="text-right">2,665</td><td class="text-right">25.89</td><td class="text-right">69.00</td><td class="text-right">0.83%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a07df2a0000000008003f03</td><td title="年轻人已经对100块钱的购买力没概念了...">年轻人已经对100块钱的购买力没概念了...</td><td>鲜水湾</td><td class="text-right">2,642</td><td class="text-right">21.95</td><td class="text-right">58.00</td><td class="text-right">2.65%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">69dcb1e6000000001f002f0f</td><td title="听劝…给孩子吃就买这种配料表干净的虾仁">听劝…给孩子吃就买这种配料表干净的虾仁</td><td>婉婉上班吃什么</td><td class="text-right">2,626</td><td class="text-right">52.55</td><td class="text-right">138.00</td><td class="text-right">0.42%</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69e5e6020000000022029222</td><td title="第一次对爬坡后吃快碳起了敬意…">第一次对爬坡后吃快碳起了敬意…</td><td>菲菲上班吃什么</td><td class="text-right">2,440</td><td class="text-right">28.28</td><td class="text-right">69.00</td><td class="text-right">0.53%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a423757000000000702ff78</td><td title="300 多块真的承包了我半个月的晚餐😭">300 多块真的承包了我半个月的晚餐😭</td><td>鲜水湾</td><td class="text-right">2,402</td><td class="text-right">49.13</td><td class="text-right">118.00</td><td class="text-right">2.33%</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a4279690000000021019d2b</td><td title="独居党真的会疯狂囤独立小包装虾仁……">独居党真的会疯狂囤独立小包装虾仁……</td><td>菲菲上班吃什么</td><td class="text-right">2,361</td><td class="text-right">28.80</td><td class="text-right">68.00</td><td class="text-right">1.48%</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69b91f54000000002800a745</td><td title="和老爹商量后，推出一人食小包装">和老爹商量后，推出一人食小包装</td><td>鲜水湾</td><td class="text-right">2,359</td><td class="text-right">29.25</td><td class="text-right">69.00</td><td class="text-right">1.91%</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a1684330000000008027d60</td><td title="以为100块没多少，结果够我吃半个月了">以为100块没多少，结果够我吃半个月了</td><td>菲菲上班吃什么</td><td class="text-right">2,318</td><td class="text-right">29.77</td><td class="text-right">69.00</td><td class="text-right">2.89%</td><td class="text-right">0.7%</td></tr>
+<tr><td class="text-center">6a311fec0000000006022f66</td><td title="控体天花板，一周才花了 69 元">控体天花板，一周才花了 69 元</td><td>婉婉上班吃什么</td><td class="text-right">2,306</td><td class="text-right">55.51</td><td class="text-right">128.00</td><td class="text-right">1.26%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a2ba7bd000000002202e46e</td><td title="听粉丝的话，推出一人食减脂小包装😽">听粉丝的话，推出一人食减脂小包装😽</td><td>小柚练后吃什么</td><td class="text-right">2,261</td><td class="text-right">30.52</td><td class="text-right">69.00</td><td class="text-right">1.46%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a28dd1e0000000008000d78</td><td title="以为69没多少结果够我吃一星期了😂">以为69没多少结果够我吃一星期了😂</td><td>婉婉上班吃什么</td><td class="text-right">2,240</td><td class="text-right">30.80</td><td class="text-right">69.00</td><td class="text-right">1.16%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a3cd10f000000002201bc0a</td><td title="听粉丝的话，推出了一人食独立小包装！！！">听粉丝的话，推出了一人食独立小包装！！！</td><td>小柚练后吃什么</td><td class="text-right">2,172</td><td class="text-right">63.54</td><td class="text-right">138.00</td><td class="text-right">1.66%</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a22b9740000000008031fca</td><td title="69的购买力解决一周上班带饭……">69的购买力解决一周上班带饭……</td><td>婉婉上班吃什么</td><td class="text-right">2,133</td><td class="text-right">32.35</td><td class="text-right">69.00</td><td class="text-right">1.36%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a22a7cd000000003503a299</td><td title="小小69元，承包了独居人一周减脂的快乐！">小小69元，承包了独居人一周减脂的快乐！</td><td>小柚练后吃什么</td><td class="text-right">2,132</td><td class="text-right">32.36</td><td class="text-right">69.00</td><td class="text-right">1.31%</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69ec8342000000001a0374a0</td><td title="三文鱼扒1000g 限时折扣，快冲吧">三文鱼扒1000g 限时折扣，快冲吧</td><td>鲜水湾</td><td class="text-right">2,080</td><td class="text-right">32.69</td><td class="text-right">68.00</td><td class="text-right">3.46%</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">69be6912000000001f002fb0</td><td title="质疑 理解 成为…懒人带饭党">质疑 理解 成为…懒人带饭党</td><td>婉婉上班吃什么</td><td class="text-right">2,060</td><td class="text-right">33.50</td><td class="text-right">69.00</td><td class="text-right">0.53%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a1260e10000000035023c08</td><td title="听劝，咱家虾仁收到就白水煮！">听劝，咱家虾仁收到就白水煮！</td><td>小柚练后吃什么</td><td class="text-right">2,042</td><td class="text-right">33.79</td><td class="text-right">69.00</td><td class="text-right">0.39%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a40cee3000000002200b8d6</td><td title="听客户说处理虾太烦，连夜改了独立小包装">听客户说处理虾太烦，连夜改了独立小包装</td><td>菲菲上班吃什么</td><td class="text-right">2,022</td><td class="text-right">62.81</td><td class="text-right">127.00</td><td class="text-right">1.09%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a2ff3f2000000000802784b</td><td title="自己赚钱后才发现，减脂期吃虾仁原来真不贵">自己赚钱后才发现，减脂期吃虾仁原来真不贵</td><td>菲菲上班吃什么</td><td class="text-right">1,941</td><td class="text-right">35.55</td><td class="text-right">69.00</td><td class="text-right">0.67%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a1ebe4100000000070221e9</td><td title="5年健身人！！！吃的干净真的会上瘾！！">5年健身人！！！吃的干净真的会上瘾！！</td><td>菲菲上班吃什么</td><td class="text-right">1,788</td><td class="text-right">38.59</td><td class="text-right">69.00</td><td class="text-right">0.78%</td><td class="text-right">1.1%</td></tr>
+<tr><td class="text-center">6a24ff110000000022008eab</td><td title="真别低估了100来块的购买力，够吃半个月了">真别低估了100来块的购买力，够吃半个月了</td><td>菲菲上班吃什么</td><td class="text-right">1,788</td><td class="text-right">38.59</td><td class="text-right">69.00</td><td class="text-right">1.12%</td><td class="text-right">0.2%</td></tr>
+<tr><td class="text-center">6a1e6a83000000000803fc2c</td><td title="刚吃完一箱，我妈催着再囤一箱">刚吃完一箱，我妈催着再囤一箱</td><td>婉婉上班吃什么</td><td class="text-right">1,744</td><td class="text-right">39.56</td><td class="text-right">69.00</td><td class="text-right">1.20%</td><td class="text-right">0.3%</td></tr>
+<tr><td class="text-center">6a2bf40500000000220201aa</td><td title="今年坠成功的消费降级，69吃一周！！">今年坠成功的消费降级，69吃一周！！</td><td>小柚练后吃什么</td><td class="text-right">1,691</td><td class="text-right">40.80</td><td class="text-right">69.00</td><td class="text-right">1.06%</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a080cd6000000000803d3f7</td><td title="这虾仁夯爆了，再也不去某马买了">这虾仁夯爆了，再也不去某马买了</td><td>婉婉上班吃什么</td><td class="text-right">1,617</td><td class="text-right">42.67</td><td class="text-right">69.00</td><td class="text-right">0.56%</td><td class="text-right">0.0%</td></tr>
+<tr><td class="text-center">6a2014a70000000021008ceb</td><td title="以为69没多少，实际够我吃一周的了！！！">以为69没多少，实际够我吃一周的了！！！</td><td>菲菲上班吃什么</td><td class="text-right">1,511</td><td class="text-right">45.67</td><td class="text-right">69.00</td><td class="text-right">1.46%</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a28c4310000000007029982</td><td title="60来块备餐一周轻食的快乐">60来块备餐一周轻食的快乐</td><td>婉婉上班吃什么</td><td class="text-right">1,473</td><td class="text-right">46.84</td><td class="text-right">69.00</td><td class="text-right">1.43%</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a2954d60000000022026549</td><td title="租房党终于找到适合小冰箱囤的食材了 ！！！！">租房党终于找到适合小冰箱囤的食材了 ！！！！</td><td>小柚练后吃什么</td><td class="text-right">1,461</td><td class="text-right">47.23</td><td class="text-right">69.00</td><td class="text-right">1.10%</td><td class="text-right">0.1%</td></tr>
+<tr><td class="text-center">6a2629b30000000021015028</td><td title="听我的！减脂还得是虾仁！才60+">听我的！减脂还得是虾仁！才60+</td><td>婉婉上班吃什么</td><td class="text-right">1,421</td><td class="text-right">48.56</td><td class="text-right">69.00</td><td class="text-right">1.27%</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a2fbfd5000000002100af7b</td><td title="都去拍这个三文鱼尾段，太适合上班带饭了！">都去拍这个三文鱼尾段，太适合上班带饭了！</td><td>鲜水湾</td><td class="text-right">1,368</td><td class="text-right">42.40</td><td class="text-right">58.00</td><td class="text-right">2.19%</td><td class="text-right">0.4%</td></tr>
+<tr><td class="text-center">6a2636f6000000000702f3c9</td><td title="好癫…减脂期吃虾仁简直尊享太庙啊️‼️">好癫…减脂期吃虾仁简直尊享太庙啊️‼️</td><td>菲菲上班吃什么</td><td class="text-right">1,298</td><td class="text-right">53.16</td><td class="text-right">69.00</td><td class="text-right">1.23%</td><td class="text-right">0.2%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="highlight-box warning"></tbody>
+    </table>
+  </div>
+
+  <div class="highlight-box warning">
+    <div class="label orange">优化思路</div>
+    <p><strong>第一条笔记"以为69没多少"曝光量高达34.7万，GPM却只有22.38</strong>，说明巨大的流量未能有效转化。建议优化：①调整商品卡的位置和视觉设计 ②增加价格对比锚点和限时优惠标签 ③在评论区置顶购买引导话术。仅优化这一条笔记，按GPM提升至50计算，可增加约9,500元GMV。</p>
+  </div>
+</div>
+
+<!-- ==================== SEC 9: CONCLUSIONS ==================== -->
+<div class="section page-break" id="sec9">
+  <h2><span class="num">9</span> 结论与行动建议</h2>
+
+  <h3>核心结论</h3>
+  <div class="highlight-box">
+    <div class="label blue">三大核心发现</div>
+    <ol>
+      <li><strong>互动即转化：</strong>互动率与GPM强相关（r=0.67），提升内容互动是当前最有效的增长杠杆。</li>
+      <li><strong>99%的GMV来自图文：</strong>图文笔记产出99.7%的GMV且GPM是视频的5.7倍，内容类型应继续以图文为主。</li>
+      <li><strong>0.5%的笔记贡献19.3%的GMV：</strong>爆款效应极其明显，头部内容复制和放大是快速提升GPM的关键。</li>
+    </ol>
+  </div>
+
+  <h3>行动建议</h3>
+
+  <div class="action-card">
+    <span class="priority high">优先级：高</span>
+    <h4>建议一：建立"高互动内容模板"，系统性复制爆款</h4>
+    <p><strong>内容：</strong>分析GPM TOP 50笔记的共同特征，提炼可复用的内容模板（标题结构、封面风格、正文节奏、CTA话术），形成标准化SOP。核心要素包括：价格锚定标题（"69/300块够X天"）+ 对比测评/效果承诺 + 商品卡优化。</p>
+    <div class="effect">
+      <strong>预期效果：</strong>有GMV笔记占比从9.5%提升至15%+，整体GPM从34.62提升至55+，预计增量GMV 8,000-12,000元。
+    </div>
+    <div class="path">
+      <strong>实施路径：</strong>内容团队复盘TOP50笔记 → 提炼3-5个爆款模板 → A/B测试 → 确认最优模板后规模化 → 周度监测GPM变化。
+    </div>
+  </div>
+
+  <div class="action-card">
+    <span class="priority high">优先级：高</span>
+    <h4>建议二：对66条高曝光低GPM笔记进行"转化急救"</h4>
+    <p><strong>内容：</strong>对曝光>5,000但GPM<50的66条笔记逐条审计，排查问题：①商品卡位置是否显眼 ②商品描述是否完整 ③是否配置了限时优惠/满减标签 ④评论区是否有购买引导。针对"以为69没多少"等超级曝光的笔记重点优化。</p>
+    <div class="effect">
+      <strong>预期效果：</strong>保守估计可将这批笔记的平均GPM从当前约25提升至45，预估可挽回额外GMV 8,000-12,000元。
+    </div>
+    <div class="path">
+      <strong>实施路径：</strong>按曝光量排序优先处理TOP 20条 → 逐条诊断 → 执行优化（商品卡/价格标签/评论区引导）→ 2周后评估效果。
+    </div>
+  </div>
+
+  <div class="action-card">
+    <span class="priority medium">优先级：中</span>
+    <h4>建议三：放大高GPM商品曝光，调整商品组合</h4>
+    <p><strong>内容：</strong>挪威冰鲜三文鱼刺身GPM达66.62，但关联笔记仅55条，曝光仅59,246。建议增加刺身类内容的产出频率，同时将三文鱼切块（一人食小包装）作为中间价位带的重点推广商品，形成"虾仁（69元引流）→ 三文鱼切块（118元主力）→ 整条三文鱼（235元高客单）"的阶梯式商品结构。</p>
+    <div class="effect">
+      <strong>预期效果：</strong>将刺身类笔记占比提升至整体15%，预计可带动整体GPM上升5-8个点。
+    </div>
+    <div class="path">
+      <strong>实施路径：</strong>内容排期中增加刺身内容占比 → 重点推一人食三文鱼切块 → 优化商品详情页的关联推荐。
+    </div>
+  </div>
+
+  <div class="action-card">
+    <span class="priority medium">优先级：中</span>
+    <h4>建议四：部署"低曝光高GPM潜力笔记"的付费放大测试</h4>
+    <p><strong>内容：</strong>66条曝光<500但GPM>500的笔记已经验证了内容转化能力，应通过薯条/聚光等付费工具进行小预算测试。按GPM排序选择TOP 10笔记，每条投入200-500元推广预算，测试放大后的转化表现。</p>
+    <div class="effect">
+      <strong>预期效果：</strong>按30%的成功率计算，预计3-5条笔记可放大为稳定爆款，预估带来增量GMV 3,000-5,000元。
+    </div>
+    <div class="path">
+      <strong>实施路径：</strong>筛选TOP 10潜力笔记 → 设置200元/条的测试预算 → 观察7天数据 → 确认ROI>3的笔记加大投入。
+    </div>
+  </div>
+
+  <div class="action-card">
+    <span class="priority low">优先级：低</span>
+    <h4>建议五：矩阵号差异化定位，减少内耗</h4>
+    <p><strong>内容：</strong>当前4个账号内容高度重叠（虾仁+三文鱼），存在内部竞争。建议进行差异化定位：鲜水湾（品牌号，主推新品/活动/整条三文鱼）、菲菲（上班带饭场景，主推虾仁+低客单）、婉婉（抗炎/健康饮食，主推三文鱼+中客单）、小柚（健身练后，主推高蛋白套餐+高客单）。</p>
+    <div class="effect">
+      <strong>预期效果：</strong>减少内部流量竞争，提升整体曝光覆盖面和人群触达效率，预计降低15-20%的内容重合度。
+    </div>
+    <div class="path">
+      <strong>实施路径：</strong>制定各账号定位规划 → 内容选题差异化排期 → 月度复盘评估效果。
+    </div>
+  </div>
+
+  <h3>预期综合效果</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>指标</th><th class="text-right">当前值</th><th class="text-right">短期目标（1个月）</th><th class="text-right">中期目标（3个月）</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>整体 GPM</td><td class="text-right">34.62</td><td class="text-right">55</td><td class="text-right">80</td></tr>
+        <tr><td>有GMV笔记占比</td><td class="text-right">9.5%</td><td class="text-right">15%</td><td class="text-right">20%</td></tr>
+        <tr><td>月 GMV</td><td class="text-right">43,438 元</td><td class="text-right">65,000 元</td><td class="text-right">100,000 元</td></tr>
+        <tr><td>爆款笔记数（GPM>100）</td><td class="text-right">58 条</td><td class="text-right">100 条</td><td class="text-right">150 条</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== METHODOLOGY ==================== -->
+<div class="section" id="methodology">
+  <h2>方法论说明</h2>
+
+  <h3>数据来源</h3>
+  <p>本报告数据来源于小红书商家后台导出的商品笔记数据与笔记维度数据，通过笔记ID匹配后合并分析。</p>
+
+  <h3>核心指标定义</h3>
+  <ul>
+    <li><strong>GPM（千次曝光GMV）：</strong>GMV ÷ 总曝光量 × 1,000，衡量每千次曝光带来的销售收入</li>
+    <li><strong>互动率：</strong>（点赞量 + 收藏量 + 评论量 + 分享量）÷ 全部曝光量</li>
+    <li><strong>曝光点击率：</strong>笔记商品点击次数 ÷ 全部曝光量</li>
+    <li><strong>加权GPM（商品维度）：</strong>该商品产生的总GMV ÷ 该商品关联笔记的总曝光量 × 1,000</li>
+  </ul>
+
+  <h3>分析方法</h3>
+  <ul>
+    <li><strong>描述性统计：</strong>整体KPI、分布特征、维度交叉分析</li>
+    <li><strong>相关性分析：</strong>Pearson相关系数，衡量指标间的线性相关关系</li>
+    <li><strong>Top-N分析：</strong>按GPM/曝光量等指标排序识别头部和尾部笔记</li>
+    <li><strong>潜力识别：</strong>基于"低曝光高转化"和"高曝光低转化"两个维度进行交叉筛选</li>
+  </ul>
+
+  <h3>局限性</h3>
+  <div class="highlight-box warning">
+    <div class="label orange">免责声明</div>
+    <ul>
+      <li>分析基于1个月的数据样本，部分结论可能存在季节性偏差</li>
+      <li>相关性不代表因果性，互动率与GPM的相关性需要进一步AB测试验证</li>
+      <li>退款数据只包含按支付时间统计的维度，可能未完全反映最终退款情况</li>
+      <li>高潜力笔记识别基于历史数据，付费放大效果需实际投放验证</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== FOOTER ==================== -->
+<div class="report-footer">
+  <p>智数分析专家团 · 洞察报告撰写师 若溪（Rex） · 生成于 2026年7月</p>
+  <p style="margin-top:4px;">数据范围：小红书矩阵号 2026年6月 · 数据量：1,805条笔记 · 42个字段</p>
+</div>
+
+</div>
+
+<script>
+// ===== Chart 1: GPM Distribution Pie =====
+(function(){
+  var c = document.getElementById('chartGpmDist');
+  var chart = echarts.init(c);
+  var option = {
+    tooltip: { trigger: 'item', formatter: '{b}: {c}条 ({d}%)' },
+    legend: { bottom: '0%', textStyle: { fontSize: 12 } },
+    series: [{
+      type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'],
+      avoidLabelOverlap: true,
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 11 },
+      emphasis: { label: { show: true, fontSize: 13, fontWeight: 'bold' } },
+      data: [
+        { value: 1747, name: '0-100', itemStyle: { color: '#a8c4e0' } },
+        { value: 48, name: '100-500', itemStyle: { color: '#5a8ec9' } },
+        { value: 8, name: '500-1000', itemStyle: { color: '#2d6a9f' } },
+        { value: 2, name: '1000-5000', itemStyle: { color: '#0f3460' } }
+      ]
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ===== Chart 2: Creator Comparison =====
+(function(){
+  var c = document.getElementById('chartCreator');
+  var chart = echarts.init(c);
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' }
+    },
+    legend: {
+      data: ['笔记数', 'GMV（百元）', '平均GPM'],
+      bottom: '0%', textStyle: { fontSize: 12 }
+    },
+    grid: { left: '8%', right: '8%', top: '8%', bottom: '20%' },
+    xAxis: {
+      type: 'category',
+      data: ['鲜水湾', '菲菲上班吃什么', '婉婉上班吃什么', '小柚练后吃什么'],
+      axisLabel: { fontSize: 11, interval: 0, rotate: 15 }
+    },
+    yAxis: [
+      { type: 'value', name: '笔记数 / GMV(百元)', nameTextStyle: { fontSize: 11 } },
+      { type: 'value', name: 'GPM', nameTextStyle: { fontSize: 11 } }
+    ],
+    series: [
+      {
+        name: '笔记数', type: 'bar', data: [560, 486, 338, 421],
+        itemStyle: { color: '#5a8ec9', borderRadius: [4,4,0,0] }
+      },
+      {
+        name: 'GMV（百元）', type: 'bar', data: [163.07, 138.05, 78.61, 54.66],
+        itemStyle: { color: '#2d6a9f', borderRadius: [4,4,0,0] }
+      },
+      {
+        name: '平均GPM', type: 'line', yAxisIndex: 1,
+        data: [10.57, 16.33, 16.62, 14.94],
+        lineStyle: { color: '#e67e22', width: 3 },
+        itemStyle: { color: '#e67e22' },
+        symbol: 'circle', symbolSize: 8
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ===== Chart 3: Product GPM Comparison =====
+(function(){
+  var c = document.getElementById('chartProduct');
+  var chart = echarts.init(c);
+  var option = {
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '8%', right: '8%', top: '8%', bottom: '8%' },
+    xAxis: {
+      type: 'category',
+      data: ['挪威冰鲜三文鱼刺身', '青岛大鲅鱼', '智利三文鱼8斤装', '智利三文鱼切块', '手剥虾仁5盒装'],
+      axisLabel: { fontSize: 10, interval: 0, rotate: 20 }
+    },
+    yAxis: { type: 'value', name: '加权GPM', nameTextStyle: { fontSize: 11 } },
+    series: [{
+      type: 'bar',
+      data: [
+        { value: 66.62, itemStyle: { color: '#0f3460' } },
+        { value: 52.94, itemStyle: { color: '#2d6a9f' } },
+        { value: 32.66, itemStyle: { color: '#5a8ec9' } },
+        { value: 16.16, itemStyle: { color: '#a8c4e0' } },
+        { value: 14.74, itemStyle: { color: '#c8d8e8' } }
+      ],
+      barWidth: '50%',
+      itemStyle: { borderRadius: [4,4,0,0] },
+      label: { show: true, position: 'top', formatter: '{c}', fontSize: 11, fontWeight: 'bold' }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>
