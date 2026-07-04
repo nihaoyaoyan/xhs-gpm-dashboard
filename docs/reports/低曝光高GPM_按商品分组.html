@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>低曝光高GPM笔记 · 按商品分组</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #0e1117; color: #e0e0e0; padding: 24px;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+.header {
+  text-align: center; padding: 32px 0 24px;
+  border-bottom: 2px solid #ff2442; margin-bottom: 32px;
+}
+.header h1 { font-size: 1.6rem; color: #ff2442; }
+.header p { color: #888; font-size: 0.85rem; margin-top: 4px; }
+
+.kpi-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+  gap: 12px; margin-bottom: 32px;
+}
+.kpi-card {
+  background: #1a1d28; border-radius: 10px; padding: 16px; text-align: center;
+  border: 1px solid #2a2d3a;
+}
+.kpi-card .num { font-size: 1.6rem; font-weight: 800; color: #ff2442; }
+.kpi-card .label { font-size: 0.75rem; color: #888; margin-top: 4px; }
+
+.chart-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px;
+}
+@media (max-width: 768px) { .chart-row { grid-template-columns: 1fr; } }
+.chart-box {
+  background: #1a1d28; border-radius: 10px; padding: 16px;
+  border: 1px solid #2a2d3a; height: 400px;
+}
+.chart-box h3 { font-size: 0.85rem; color: #aaa; margin-bottom: 8px; }
+
+.prod-section { margin-bottom: 40px; }
+.prod-section h2 {
+  font-size: 1.1rem; color: #ff6b6b; margin-bottom: 16px;
+  padding-bottom: 8px; border-bottom: 1px solid #2a2d3a;
+}
+table {
+  width: 100%; border-collapse: collapse; font-size: 0.82rem;
+}
+th {
+  background: #1a1d28; padding: 10px 12px; text-align: left;
+  font-weight: 600; color: #888; white-space: nowrap;
+  border-bottom: 2px solid #ff2442;
+}
+td {
+  padding: 10px 12px; border-bottom: 1px solid #2a2d3a;
+}
+tr:hover td { background: rgba(255,36,66,0.05); }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.gpm-high { color: #ff6b6b; font-weight: 700; }
+.gpm-low { color: #4a6cf7; }
+.month-tag {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 0.7rem; margin: 0 2px;
+}
+.tag-3m { background: #1a3a5c; color: #6db3f2; }
+.tag-4m { background: #3a1a5c; color: #c46df2; }
+.tag-5m { background: #5c3a1a; color: #f2c46d; }
+.tag-6m { background: #5c1a1a; color: #f26d6d; }
+
+.footer { text-align: center; padding: 24px; color: #444; font-size: 0.75rem; border-top: 1px solid #1a1d28; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>📦 低曝光高GPM潜力笔记 · 按商品分组</h1>
+    <p>3月 ~ 6月 共256条 · 曝光量低于中位数 + GPM高于中位数</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="num">256</div><div class="label">潜力爆款总数</div></div>
+    <div class="kpi-card"><div class="num">8</div><div class="label">涉及商品数</div></div>
+    <div class="kpi-card"><div class="num">¥33,384</div><div class="label">累计可放大GMV</div></div>
+    <div class="kpi-card"><div class="num">201</div><div class="label">手剥虾仁篇数</div></div>
+  </div>
+
+  <!-- Chart: Product GPM comparison -->
+  <div class="chart-row">
+    <div class="chart-box" id="chart-product-gpm"><h3>各商品加权GPM对比</h3></div>
+    <div class="chart-box" id="chart-product-gmv"><h3>各商品GMV贡献分布</h3></div>
+  </div>
+
+  <!-- Chart: Monthly product breakdown -->
+  <div class="chart-row">
+    <div class="chart-box" id="chart-monthly-trend"><h3>各商品月度GMV趋势</h3></div>
+    <div class="chart-box" id="chart-product-count"><h3>各商品潜力笔记篇数</h3></div>
+  </div>
+
+  <!-- Product Detail Section -->
+  <div class="prod-section">
+    <h2>🥇 手剥虾仁 · 无冰衣无添加 · 5盒装（201篇）</h2>
+    <p style="color:#888;font-size:0.8rem;margin-bottom:12px;">
+      总GMV: ¥22,760 | 加权GPM: 135.9 | 覆盖月份: 3月~6月 | 
+      单篇最高GPM: 9,142.9
+    </p>
+    <p style="color:#ff6b6b;font-size:0.85rem;background:#2a1a1a;padding:12px;border-radius:8px;margin-bottom:12px;">
+      💡 占潜力爆款总量的78.5%！是内容→转化链路最成熟的品类，每月稳定产出大量低曝光高转化笔记。
+    </p>
+    <table>
+      <thead><tr><th>月份</th><th>篇数</th><th class="text-right">GMV</th><th class="text-right">平均GPM</th></tr></thead>
+      <tbody>
+        <tr><td>3月</td><td>27</td><td class="text-right">¥3,556</td><td class="text-right gpm-low">120.0</td></tr>
+        <tr><td>4月</td><td>56</td><td class="text-right">¥7,065</td><td class="text-right gpm-low">191.8</td></tr>
+        <tr><td>5月</td><td>66</td><td class="text-right">¥7,782</td><td class="text-right gpm-high">532.2</td></tr>
+        <tr><td>6月</td><td>52</td><td class="text-right">¥4,357</td><td class="text-right gpm-low">265.5</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prod-section">
+    <h2>🥈 智利三文鱼切块 · 一人食（26篇）</h2>
+    <p style="color:#888;font-size:0.8rem;margin-bottom:12px;">
+      总GMV: ¥5,639 | 加权GPM: 235.7 | 覆盖月份: 3月~6月
+    </p>
+    <p style="color:#4a6cf7;font-size:0.85rem;background:#1a1a2e;padding:12px;border-radius:8px;margin-bottom:12px;">
+      💡 高客单高转化商品，GPM普遍高于虾仁。4月曾出现单篇GPM突破10,000的爆款。
+    </p>
+    <table>
+      <thead><tr><th>月份</th><th>篇数</th><th class="text-right">GMV</th><th class="text-right">平均GPM</th><th class="text-right">最高GPM</th></tr></thead>
+      <tbody>
+        <tr><td>3月</td><td>8</td><td class="text-right">¥1,579</td><td class="text-right">257.7</td><td class="text-right gpm-high">940.5</td></tr>
+        <tr><td>4月</td><td>7</td><td class="text-right">¥1,776</td><td class="text-right gpm-high">1,690.6</td><td class="text-right gpm-high">10,216.2</td></tr>
+        <tr><td>5月</td><td>6</td><td class="text-right">¥1,128</td><td class="text-right">285.3</td><td class="text-right">514.0</td></tr>
+        <tr><td>6月</td><td>5</td><td class="text-right">¥1,156</td><td class="text-right">371.3</td><td class="text-right">969.4</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prod-section">
+    <h2>🥉 智利三文鱼 · 8斤整条装（10篇）</h2>
+    <p style="color:#888;font-size:0.8rem;margin-bottom:12px;">
+      总GMV: ¥2,477 | 加权GPM: 313.0 | 覆盖月份: 5月~6月
+    </p>
+    <table>
+      <thead><tr><th>月份</th><th>篇数</th><th class="text-right">GMV</th><th class="text-right">平均GPM</th></tr></thead>
+      <tbody>
+        <tr><td>5月</td><td>5</td><td class="text-right">¥1,208</td><td class="text-right">393.4</td></tr>
+        <tr><td>6月</td><td>5</td><td class="text-right">¥1,269</td><td class="text-right gpm-high">496.1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prod-section">
+    <h2>🦐 北极甜虾 · 头籽虾（4篇）</h2>
+    <p style="color:#888;font-size:0.8rem;margin-bottom:12px;">
+      总GMV: ¥947 | 加权GPM: 487.9（最高）| 覆盖月份: 4月~6月
+    </p>
+    <p style="color:#ff6b6b;font-size:0.85rem;background:#2a1a1a;padding:12px;border-radius:8px;margin-bottom:12px;">
+      💡 仅4篇但GPM高达487.9，是所有品类中转化效率最高的！内容供给严重不足，值得加大产出。
+    </p>
+    <table>
+      <thead><tr><th>月份</th><th>篇数</th><th class="text-right">GMV</th><th class="text-right">平均GPM</th></tr></thead>
+      <tbody>
+        <tr><td>4月</td><td>2</td><td class="text-right">¥632</td><td class="text-right gpm-high">4,631.3</td></tr>
+        <tr><td>5月</td><td>1</td><td class="text-right">¥158</td><td class="text-right">250.8</td></tr>
+        <tr><td>6月</td><td>1</td><td class="text-right">¥157</td><td class="text-right">205.8</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prod-section">
+    <h2>🐚 其他商品（34篇）</h2>
+    <p style="color:#888;font-size:0.8rem;margin-bottom:12px;">
+      含：大虾盐冻白虾10篇(¥745) · 青岛大鲅鱼2篇(¥526) · 生蚝2篇(¥190) · 挪威三文鱼刺身1篇(¥90)
+    </p>
+    <table>
+      <thead><tr><th>商品</th><th>篇数</th><th class="text-right">GMV</th><th class="text-right">加权GPM</th><th>覆盖月份</th></tr></thead>
+      <tbody>
+        <tr><td>大虾·盐冻白虾</td><td>10</td><td class="text-right">¥745</td><td class="text-right">143.3</td><td><span class="month-tag tag-3m">3月</span><span class="month-tag tag-4m">4月</span><span class="month-tag tag-5m">5月</span><span class="month-tag tag-6m">6月</span></td></tr>
+        <tr><td>青岛大鲅鱼</td><td>2</td><td class="text-right">¥526</td><td class="text-right gpm-high">271.4</td><td><span class="month-tag tag-5m">5月</span><span class="month-tag tag-6m">6月</span></td></tr>
+        <tr><td>生蚝·乳山生蚝</td><td>2</td><td class="text-right">¥190</td><td class="text-right">156.5</td><td><span class="month-tag tag-3m">3月</span></td></tr>
+        <tr><td>挪威冰鲜三文鱼刺身</td><td>1</td><td class="text-right">¥90</td><td class="text-right">183.1</td><td><span class="month-tag tag-6m">6月</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    数据范围：2026年3月~6月 · 小红书GPM数据看板 · 由智数分析专家团分析
+  </div>
+</div>
+
+<script>
+// Chart 1: Product GPM comparison
+(function() {
+  var chart = echarts.init(document.getElementById('chart-product-gpm'));
+  chart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '3%', right: '4%', bottom: '15%', top: '5%', containLabel: true },
+    xAxis: { type: 'category', data: ['手剥虾仁\n5盒装', '智利三文鱼\n切块·一人食', '智利三文鱼\n8斤整条', '北极甜虾\n头籽虾', '大虾·\n盐冻白虾', '青岛大鲅鱼', '生蚝·\n乳山生蚝', '挪威三文鱼\n刺身'],
+      axisLabel: { color: '#888', fontSize: 10, interval: 0 } },
+    yAxis: { type: 'value', name: '加权GPM', nameTextStyle: { color: '#888' }, axisLabel: { color: '#888' } },
+    series: [{
+      type: 'bar', data: [135.9, 235.7, 313.0, 487.9, 143.3, 271.4, 156.5, 183.1],
+      itemStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#ff2442'},{offset:1,color:'#ff6b6b'}]) },
+      label: { show: true, position: 'top', color: '#ff6b6b', fontWeight: 'bold', fontSize: 11 }
+    }]
+  });
+})();
+
+// Chart 2: Product GMV distribution (pie)
+(function() {
+  var chart = echarts.init(document.getElementById('chart-product-gmv'));
+  chart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: ¥{c} ({d}%)' },
+    series: [{
+      type: 'pie', radius: ['30%', '60%'],
+      data: [
+        { value: 22760, name: '手剥虾仁5盒装', itemStyle: { color: '#ff2442' } },
+        { value: 5639, name: '三文鱼切块', itemStyle: { color: '#ff6b6b' } },
+        { value: 2477, name: '三文鱼8斤装', itemStyle: { color: '#4a6cf7' } },
+        { value: 947, name: '北极甜虾', itemStyle: { color: '#ff6b35' } },
+        { value: 745, name: '大虾·白虾', itemStyle: { color: '#6db3f2' } },
+        { value: 526, name: '青岛大鲅鱼', itemStyle: { color: '#c46df2' } },
+        { value: 190, name: '生蚝', itemStyle: { color: '#2a8a5e' } },
+        { value: 90, name: '挪威三文鱼刺身', itemStyle: { color: '#f2c46d' } }
+      ],
+      label: { color: '#aaa', fontSize: 11, formatter: '{b}\n¥{c}' },
+      labelLine: { lineStyle: { color: '#555' } }
+    }]
+  });
+})();
+
+// Chart 3: Monthly product GMV trend
+(function() {
+  var chart = echarts.init(document.getElementById('chart-monthly-trend'));
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['手剥虾仁','三文鱼切块','三文鱼8斤装','北极甜虾','大虾·白虾'], textStyle: { color: '#888', fontSize: 10 }, bottom: 0 },
+    grid: { left: '3%', right: '4%', bottom: '25%', top: '5%', containLabel: true },
+    xAxis: { type: 'category', data: ['3月','4月','5月','6月'], axisLabel: { color: '#888' } },
+    yAxis: { type: 'value', name: 'GMV (¥)', nameTextStyle: { color: '#888' }, axisLabel: { color: '#888' } },
+    series: [
+      { name: '手剥虾仁', type: 'bar', stack: 'total', data: [3556, 7065, 7782, 4357], itemStyle: { color: '#ff2442' } },
+      { name: '三文鱼切块', type: 'bar', stack: 'total', data: [1579, 1776, 1128, 1156], itemStyle: { color: '#ff6b6b' } },
+      { name: '三文鱼8斤装', type: 'bar', stack: 'total', data: [0, 0, 1208, 1269], itemStyle: { color: '#4a6cf7' } },
+      { name: '北极甜虾', type: 'bar', stack: 'total', data: [0, 632, 158, 157], itemStyle: { color: '#ff6b35' } },
+      { name: '大虾·白虾', type: 'bar', stack: 'total', data: [371, 217, 79, 78], itemStyle: { color: '#6db3f2' } }
+    ]
+  });
+})();
+
+// Chart 4: Product count
+(function() {
+  var chart = echarts.init(document.getElementById('chart-product-count'));
+  chart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '5%', containLabel: true },
+    xAxis: { type: 'value', name: '篇数', axisLabel: { color: '#888' } },
+    yAxis: { type: 'category', data: ['挪威三文鱼刺身','生蚝','青岛大鲅鱼','北极甜虾','大虾·白虾','三文鱼8斤装','三文鱼切块','手剥虾仁'].reverse(),
+      axisLabel: { color: '#aaa', fontSize: 10 } },
+    series: [{
+      type: 'bar', data: [1,2,2,4,10,10,26,201],
+      itemStyle: { color: new echarts.graphic.LinearGradient(0,0,1,0,[{offset:0,color:'#4a6cf7'},{offset:1,color:'#ff2442'}]) },
+      label: { show: true, position: 'right', color: '#ff6b6b', fontWeight: 'bold' }
+    }]
+  });
+})();
+</script>
+</body>
+</html>
