@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书GPM仪表盘 · 7月第1周 (7.1~7.5)</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0e1117; color: #e6edf3; font-family: -apple-system, "Microsoft YaHei", sans-serif; padding: 20px; }
+.header { text-align: center; padding: 30px 0 20px; border-bottom: 1px solid #30363d; margin-bottom: 24px; }
+.header h1 { font-size: 28px; color: #ff2442; margin-bottom: 8px; }
+.header .sub { font-size: 14px; color: #8b949e; }
+.header .gpm-big { font-size: 48px; color: #ff2442; font-weight: bold; margin: 12px 0; }
+.header .wow { font-size: 16px; }
+.up { color: #ff2442; } .down { color: #3fb950; } .neutral { color: #d29922; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kpi-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; text-align: center; transition: transform 0.2s; }
+.kpi-card:hover { transform: translateY(-3px); border-color: #ff2442; }
+.kpi-card .label { font-size: 12px; color: #8b949e; margin-bottom: 8px; }
+.kpi-card .value { font-size: 24px; font-weight: bold; color: #e6edf3; }
+.kpi-card .change { font-size: 12px; margin-top: 6px; }
+
+.section { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+.section h2 { font-size: 18px; color: #e6edf3; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #30363d; }
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.chart-box { background: #0d1117; border-radius: 8px; padding: 16px; min-height: 350px; }
+.chart-title { font-size: 14px; color: #8b949e; margin-bottom: 8px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #21262d; color: #8b949e; padding: 10px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #30363d; }
+td { padding: 10px 12px; border-bottom: 1px solid #21262d; color: #e6edf3; }
+tr:hover { background: #161b22; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.tag-high { background: rgba(255,36,66,0.15); color: #ff2442; }
+.tag-mid { background: rgba(210,153,34,0.15); color: #d29922; }
+.tag-low { background: rgba(63,185,80,0.15); color: #3fb950; }
+.tag-none { background: rgba(139,148,158,0.15); color: #8b949e; }
+
+.footer { text-align: center; color: #484f58; font-size: 12px; padding: 20px 0; border-top: 1px solid #30363d; margin-top: 24px; }
+@media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📊 小红书 GPM 数据仪表盘</h1>
+    <div class="sub">2026年7月第1周 (7.1~7.5) | 数据更新: 2026-07-06 10:08</div>
+    <div class="gpm-big">184.11</div>
+    <div class="sub">整体 GPM (千次展示成交额)</div>
+    <div class="wow">
+        环比上周: GPM <span class="up">↑39.6%</span> · 
+        GMV <span class="up">↑2.8%</span> · 
+        曝光 <span class="down">↓26.3%</span>
+    </div>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card"><div class="label">💰 总GMV</div><div class="value">¥12,329</div><div class="change up">↑2.8% vs 上周</div></div>
+    <div class="kpi-card"><div class="label">👁️ 总曝光量</div><div class="value">66,968</div><div class="change down">↓26.3% vs 上周</div></div>
+    <div class="kpi-card"><div class="label">📝 笔记总数</div><div class="value">1,132</div><div class="change">合并后匹配</div></div>
+    <div class="kpi-card"><div class="label">🛒 有成交笔记</div><div class="value">51</div><div class="change">占比 4.5%</div></div>
+    <div class="kpi-card"><div class="label">📦 总订单数</div><div class="value">107</div><div class="change neutral">客单价 ¥115.23</div></div>
+    <div class="kpi-card"><div class="label">👆 商品点击</div><div class="value">3,150</div><div class="change">点击率 4.7%</div></div>
+    <div class="kpi-card"><div class="label">❤️ 互动总量</div><div class="value">536</div><div class="change">互动率 0.8%</div></div>
+    <div class="kpi-card"><div class="label">🔄 退款率</div><div class="value">14.09%</div><div class="change down">退款 ¥1,737</div></div>
+</div>
+
+<div class="section">
+    <h2>📈 六期趋势对比</h2>
+    <div class="chart-box" id="chart-history" style="min-height: 380px;"></div>
+</div>
+
+<div class="section">
+    <h2>👥 创作者维度分析</h2>
+    <div class="chart-grid">
+        <div class="chart-box" id="chart-creator-gpm" style="min-height: 350px;"></div>
+        <div class="chart-box" id="chart-creator-gmv" style="min-height: 350px;"></div>
+    </div>
+    <div style="overflow-x:auto; margin-top: 16px;">
+    <table>
+        <thead><tr>
+            <th>创作者</th><th>笔记数</th><th>有成交</th><th>GMV</th><th>曝光量</th><th>GPM</th><th>订单数</th><th>客单价</th><th>互动率</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+            <td>菲菲上班吃什么</td><td>349</td><td>14 (4.0%)</td>
+            <td>¥3,845</td><td>21,028</td>
+            <td><span class="tag tag-mid">182.87</span></td>
+            <td>51</td><td>¥75.4</td><td>1.14%</td>
+        </tr><tr>
+            <td>鲜水湾</td><td>290</td><td>14 (4.8%)</td>
+            <td>¥4,357</td><td>15,015</td>
+            <td><span class="tag tag-high">290.16</span></td>
+            <td>26</td><td>¥167.57</td><td>0.8%</td>
+        </tr><tr>
+            <td>小柚练后吃什么</td><td>254</td><td>12 (4.7%)</td>
+            <td>¥935</td><td>11,974</td>
+            <td><span class="tag tag-low">78.09</span></td>
+            <td>12</td><td>¥77.92</td><td>0.32%</td>
+        </tr><tr>
+            <td>婉婉上班吃什么</td><td>239</td><td>11 (4.6%)</td>
+            <td>¥3,192</td><td>18,951</td>
+            <td><span class="tag tag-mid">168.44</span></td>
+            <td>18</td><td>¥177.34</td><td>0.73%</td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="section">
+    <h2>📊 GPM分段 & 笔记类型</h2>
+    <div class="chart-grid">
+        <div class="chart-box" id="chart-segment" style="min-height: 350px;"></div>
+        <div class="chart-box" id="chart-type" style="min-height: 350px;"></div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>📅 本周每日趋势</h2>
+    <div class="chart-box" id="chart-daily" style="min-height: 350px;"></div>
+</div>
+
+<div class="section">
+    <h2>🛍️ 关联商品分析</h2>
+    <div style="overflow-x:auto;">
+    <table>
+        <thead><tr><th>商品名称</th><th>关联笔记</th><th>GMV</th><th>曝光量</th><th>GPM</th><th>订单数</th></tr></thead>
+        <tbody>
+        <tr>
+            <td style="max-width:400px;">手剥虾仁 无冰衣无添加 低脂餐一人食 上班带饭 顺丰包邮 5盒装</td><td>785</td>
+            <td>¥5,761</td><td>48,841</td>
+            <td><span class="tag tag-mid">117.96</span></td>
+            <td>76</td>
+        </tr><tr>
+            <td style="max-width:400px;">智利尾端中段整条三文鱼 8斤深海鱼低脂餐囤货一周备菜顺丰包邮</td><td>119</td>
+            <td>¥4,050</td><td>9,491</td>
+            <td><span class="tag tag-high">426.73</span></td>
+            <td>15</td>
+        </tr><tr>
+            <td style="max-width:400px;">智利三文鱼切块·整条三文鱼·深海鱼一人食健康饮食</td><td>142</td>
+            <td>¥2,430</td><td>6,609</td>
+            <td><span class="tag tag-high">367.68</span></td>
+            <td>14</td>
+        </tr><tr>
+            <td style="max-width:400px;">挪威冰鲜三文鱼刺身级食材生鱼片日式火锅食材顺丰包邮</td><td>4</td>
+            <td>¥49</td><td>119</td>
+            <td><span class="tag tag-high">410.92</span></td>
+            <td>1</td>
+        </tr><tr>
+            <td style="max-width:400px;">青岛大鲅鱼春鲅鱼鲅鱼新鲜冷冻马鲛鱼蓝点马鲛鱼顺丰包邮</td><td>5</td>
+            <td>¥39</td><td>894</td>
+            <td><span class="tag tag-low">43.51</span></td>
+            <td>1</td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="section">
+    <h2>🏆 Top 20 成交笔记</h2>
+    <div style="overflow-x:auto;">
+    <table>
+        <thead><tr><th>#</th><th>笔记标题</th><th>创作者</th><th>类型</th><th>GMV</th><th>曝光量</th><th>GPM</th><th>订单</th><th>互动</th><th>点击</th></tr></thead>
+        <tbody>
+        <tr>
+            <td>1</td>
+            <td style="max-width:300px;">300 来块的购买力，一整条够吃一个月了</td>
+            <td>鲜水湾</td><td>图文</td>
+            <td>¥2,722</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>9</td><td>7</td><td>122</td>
+        </tr><tr>
+            <td>2</td>
+            <td style="max-width:300px;">以为 69 没多少，结果解决了我一周上班带饭</td>
+            <td>菲菲上班吃什么</td><td>图文</td>
+            <td>¥1,274</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>17</td><td>75</td><td>357</td>
+        </tr><tr>
+            <td>3</td>
+            <td style="max-width:300px;">到家一整条三文鱼，也就一个月的量😅</td>
+            <td>婉婉上班吃什么</td><td>图文</td>
+            <td>¥791</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>3</td><td>3</td><td>17</td>
+        </tr><tr>
+            <td>4</td>
+            <td style="max-width:300px;">60块独立小包装虾仁，解决我一周减脂餐！！！</td>
+            <td>菲菲上班吃什么</td><td>图文</td>
+            <td>¥740</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>10</td><td>25</td><td>321</td>
+        </tr><tr>
+            <td>5</td>
+            <td style="max-width:300px;">其实300来块够吃一个月抗炎饮食了</td>
+            <td>婉婉上班吃什么</td><td>图文</td>
+            <td>¥704</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>2</td><td>43</td><td>78</td>
+        </tr><tr>
+            <td>6</td>
+            <td style="max-width:300px;">区区 300 多，承包了我一个月的减脂餐</td>
+            <td>婉婉上班吃什么</td><td>图文</td>
+            <td>¥484</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>2</td><td>25</td><td>176</td>
+        </tr><tr>
+            <td>7</td>
+            <td style="max-width:300px;">和老爸商量后，推出夏日减脂小包装！</td>
+            <td>菲菲上班吃什么</td><td>图文</td>
+            <td>¥476</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>7</td><td>29</td><td>306</td>
+        </tr><tr>
+            <td>8</td>
+            <td style="max-width:300px;">唯一的缺点就是只能熟吃！</td>
+            <td>鲜水湾</td><td>图文</td>
+            <td>¥404</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>2</td><td>27</td><td>128</td>
+        </tr><tr>
+            <td>9</td>
+            <td style="max-width:300px;">我妈以为很贵的整条三文鱼。。。</td>
+            <td>婉婉上班吃什么</td><td>图文</td>
+            <td>¥367</td><td>115</td>
+            <td>3192</td>
+            <td>1</td><td>0</td><td>1</td>
+        </tr><tr>
+            <td>10</td>
+            <td style="max-width:300px;">控体天花板，一周才花了 69 元</td>
+            <td>婉婉上班吃什么</td><td>图文</td>
+            <td>¥254</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>2</td><td>0</td><td>44</td>
+        </tr><tr>
+            <td>11</td>
+            <td style="max-width:300px;">听老爸的话，给减脂人推出备餐小包装了</td>
+            <td>鲜水湾</td><td>图文</td>
+            <td>¥234</td><td>928</td>
+            <td>252</td>
+            <td>2</td><td>1</td><td>32</td>
+        </tr><tr>
+            <td>12</td>
+            <td style="max-width:300px;">某姆的虾仁我吃了三年，直到换了它</td>
+            <td>婉婉上班吃什么</td><td>图文</td>
+            <td>¥204</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>3</td><td>7</td><td>69</td>
+        </tr><tr>
+            <td>13</td>
+            <td style="max-width:300px;">在某马买了3次虾仁，最后一次我决定换一家</td>
+            <td>菲菲上班吃什么</td><td>图文</td>
+            <td>¥204</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>3</td><td>3</td><td>52</td>
+        </tr><tr>
+            <td>14</td>
+            <td style="max-width:300px;">一次一袋，真的太适合独居一人食了！！！</td>
+            <td>菲菲上班吃什么</td><td>图文</td>
+            <td>¥204</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>3</td><td>4</td><td>44</td>
+        </tr><tr>
+            <td>15</td>
+            <td style="max-width:300px;">看完鹅腿阿姨热搜，老爸说配料表必须写清楚</td>
+            <td>鲜水湾</td><td>图文</td>
+            <td>¥195</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>2</td><td>2</td><td>25</td>
+        </tr><tr>
+            <td>16</td>
+            <td style="max-width:300px;">长期主义的三文鱼，真的没有平替。。。</td>
+            <td>菲菲上班吃什么</td><td>图文</td>
+            <td>¥148</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>1</td><td>0</td><td>23</td>
+        </tr><tr>
+            <td>17</td>
+            <td style="max-width:300px;">和老爸商量后，特意推出一人食专属小包装</td>
+            <td>菲菲上班吃什么</td><td>图文</td>
+            <td>¥136</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>2</td><td>8</td><td>46</td>
+        </tr><tr>
+            <td>18</td>
+            <td style="max-width:300px;">和老爸商量了，专为独居人推出专属小包装</td>
+            <td>菲菲上班吃什么</td><td>图文</td>
+            <td>¥136</td><td>341</td>
+            <td>399</td>
+            <td>2</td><td>2</td><td>5</td>
+        </tr><tr>
+            <td>19</td>
+            <td style="max-width:300px;">年轻人已经对100块钱的购买力没概念了...</td>
+            <td>鲜水湾</td><td>图文</td>
+            <td>¥130</td><td>430</td>
+            <td>302</td>
+            <td>2</td><td>0</td><td>24</td>
+        </tr><tr>
+            <td>20</td>
+            <td style="max-width:300px;">果然是邪修减脂餐，独居一顿一盒很方便！！！</td>
+            <td>小柚练后吃什么</td><td>图文</td>
+            <td>¥128</td><td>0</td>
+            <td><span class="tag tag-none">无曝光</span></td>
+            <td>1</td><td>4</td><td>7</td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="footer">
+    <p>小红书GPM数据看板 | 鲜水湾团队 · 数据分析主理人: 诺亚 | 2026-07-06</p>
+    <p style="margin-top:4px;">数据周期: 2026-07-01~07-05 | 合并笔记: 1132条 | 导出时间: 2026-07-06 10:08</p>
+</div>
+
+<script>
+const C_RED = '#ff2442', C_GREEN = '#3fb950', C_YELLOW = '#d29922', C_BLUE = '#58a6ff', C_PURPLE = '#bc8cff', C_ORANGE = '#f0883e';
+const C_BG = '#0d1117', C_TEXT = '#e6edf3', C_AXIS = '#8b949e', C_SPLIT = '#21262d';
+
+// 1. 六期趋势
+var chart1 = echarts.init(document.getElementById('chart-history'));
+chart1.setOption({
+    backgroundColor: C_BG,
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['GPM', 'GMV(¥)', '曝光量'], textStyle: { color: C_TEXT } },
+    grid: { left: '6%', right: '6%', bottom: '10%' },
+    xAxis: { type: 'category', data: ["3\u6708", "4\u6708", "5\u6708", "6\u6708", "\u4e0a\u5468\n(6.23-7.3)", "\u672c\u5468\n(7.1-7.5)"], axisLabel: { color: C_AXIS, fontSize: 11 } },
+    yAxis: [
+        { type: 'value', name: 'GPM', axisLabel: { color: C_AXIS }, splitLine: { lineStyle: { color: C_SPLIT } } },
+        { type: 'value', name: 'GMV/曝光', axisLabel: { color: C_AXIS }, splitLine: { show: false } }
+    ],
+    series: [
+        { name: 'GPM', type: 'bar', data: [37.19, 54.1, 38.85, 34.62, 131.93, 184.11], itemStyle: { color: C_RED }, barWidth: '20%' },
+        { name: 'GMV(¥)', type: 'line', yAxisIndex: 1, data: [51421, 89390, 79650, 43438, 11997, 12329.42], itemStyle: { color: C_YELLOW }, smooth: true },
+        { name: '曝光量', type: 'line', yAxisIndex: 1, data: [1382243, 1652271, 2050573, 1254857, 90917, 66968], itemStyle: { color: C_BLUE }, smooth: true }
+    ]
+});
+
+// 2. 创作者GPM
+var chart2 = echarts.init(document.getElementById('chart-creator-gpm'));
+chart2.setOption({
+    backgroundColor: C_BG,
+    title: { text: '各创作者 GPM 对比', textStyle: { color: C_TEXT, fontSize: 14 } },
+    tooltip: { trigger: 'axis' },
+    grid: { left: '8%', right: '5%', bottom: '15%' },
+    xAxis: { type: 'category', data: ['菲菲上班吃什么', '鲜水湾', '小柚练后吃什么', '婉婉上班吃什么'], axisLabel: { color: C_AXIS, rotate: 20 } },
+    yAxis: { type: 'value', axisLabel: { color: C_AXIS }, splitLine: { lineStyle: { color: C_SPLIT } } },
+    series: [{
+        type: 'bar',
+        data: [{"value": 182.87, "itemStyle": {"color": "#d29922"}}, {"value": 290.16, "itemStyle": {"color": "#ff2442"}}, {"value": 78.09, "itemStyle": {"color": "#3fb950"}}, {"value": 168.44, "itemStyle": {"color": "#d29922"}}],
+        label: { show: true, position: 'top', color: C_TEXT, fontSize: 12 }
+    }]
+});
+
+// 3. 创作者GMV
+var chart3 = echarts.init(document.getElementById('chart-creator-gmv'));
+chart3.setOption({
+    backgroundColor: C_BG,
+    title: { text: '各创作者 GMV & 曝光', textStyle: { color: C_TEXT, fontSize: 14 } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['GMV', '曝光量'], textStyle: { color: C_TEXT }, top: 25 },
+    grid: { left: '8%', right: '8%', bottom: '15%' },
+    xAxis: { type: 'category', data: ['菲菲上班吃什么', '鲜水湾', '小柚练后吃什么', '婉婉上班吃什么'], axisLabel: { color: C_AXIS, rotate: 20 } },
+    yAxis: [
+        { type: 'value', name: 'GMV', axisLabel: { color: C_AXIS }, splitLine: { lineStyle: { color: C_SPLIT } } },
+        { type: 'value', name: '曝光', axisLabel: { color: C_AXIS }, splitLine: { show: false } }
+    ],
+    series: [
+        { name: 'GMV', type: 'bar', data: [3845.49, 4356.8, 935.0, 3192.13], itemStyle: { color: C_YELLOW } },
+        { name: '曝光量', type: 'line', yAxisIndex: 1, data: [21028, 15015, 11974, 18951], itemStyle: { color: C_BLUE }, smooth: true }
+    ]
+});
+
+// 4. GPM分段
+var chart4 = echarts.init(document.getElementById('chart-segment'));
+var segColors = [C_RED, C_ORANGE, C_YELLOW, C_GREEN, '#484f58'];
+chart4.setOption({
+    backgroundColor: C_BG,
+    title: { text: 'GPM分段分布', textStyle: { color: C_TEXT, fontSize: 14 } },
+    tooltip: { trigger: 'item', formatter: '{b}: {c}篇 ({d}%)' },
+    legend: { orient: 'vertical', right: '5%', top: 'middle', textStyle: { color: C_TEXT, fontSize: 12 } },
+    series: [{
+        type: 'pie', radius: ['40%', '65%'], center: ['40%', '50%'],
+        data: [{"name": "\u9ad8GPM(\u2265500)", "value": 10}, {"name": "\u4e2d\u9ad8GPM(200-500)", "value": 3}, {"name": "\u4e2dGPM(50-200)", "value": 9}, {"name": "\u4f4eGPM(<50)", "value": 29}, {"name": "\u65e0\u6210\u4ea4", "value": 1081}],
+        itemStyle: { borderRadius: 6, borderColor: C_BG, borderWidth: 2 },
+        label: { color: C_TEXT, fontSize: 12 },
+        color: segColors
+    }]
+});
+
+// 5. 笔记类型
+var chart5 = echarts.init(document.getElementById('chart-type'));
+chart5.setOption({
+    backgroundColor: C_BG,
+    title: { text: '图文 vs 视频', textStyle: { color: C_TEXT, fontSize: 14 } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['笔记数', 'GMV', '曝光量'], textStyle: { color: C_TEXT }, top: 25 },
+    grid: { left: '8%', right: '8%', bottom: '15%' },
+    xAxis: { type: 'category', data: ['图文笔记', '视频笔记'], axisLabel: { color: C_AXIS } },
+    yAxis: { type: 'value', axisLabel: { color: C_AXIS }, splitLine: { lineStyle: { color: C_SPLIT } } },
+    series: [
+        { name: '笔记数', type: 'bar', data: [1107, 25], itemStyle: { color: C_BLUE } },
+        { name: 'GMV', type: 'bar', data: [12329.42, 0.0], itemStyle: { color: C_RED } },
+        { name: '曝光量', type: 'bar', data: [66345, 623], itemStyle: { color: C_GREEN } }
+    ]
+});
+
+// 6. 每日趋势
+var chart6 = echarts.init(document.getElementById('chart-daily'));
+chart6.setOption({
+    backgroundColor: C_BG,
+    title: { text: '7月每日 GPM / GMV / 曝光', textStyle: { color: C_TEXT, fontSize: 14 } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['GPM', 'GMV(¥)', '曝光量'], textStyle: { color: C_TEXT } },
+    grid: { left: '6%', right: '6%', bottom: '10%' },
+    xAxis: { type: 'category', data: ["07-01", "07-02", "07-03", "07-04", "07-05"], axisLabel: { color: C_AXIS } },
+    yAxis: [
+        { type: 'value', name: 'GPM', axisLabel: { color: C_AXIS }, splitLine: { lineStyle: { color: C_SPLIT } } },
+        { type: 'value', name: 'GMV/曝光', axisLabel: { color: C_AXIS }, splitLine: { show: false } }
+    ],
+    series: [
+        { name: 'GPM', type: 'bar', data: [323.63, 297.52, 83.2, 414.25, 60.84], itemStyle: { color: C_RED }, barWidth: '25%' },
+        { name: 'GMV(¥)', type: 'line', yAxisIndex: 1, data: [725.9, 876.49, 263.0, 1145.0, 128.0], itemStyle: { color: C_YELLOW }, smooth: true },
+        { name: '曝光量', type: 'line', yAxisIndex: 1, data: [2243, 2946, 3161, 2764, 2104], itemStyle: { color: C_BLUE }, smooth: true }
+    ]
+});
+
+window.addEventListener('resize', function() {
+    [chart1, chart2, chart3, chart4, chart5, chart6].forEach(c => c.resize());
+});
+</script>
+</body>
+</html>
