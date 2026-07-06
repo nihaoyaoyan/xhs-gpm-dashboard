@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>琪琪生鲜 · 全域投放方案仪表盘</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0e1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;padding:20px;min-height:100vh}
+.header{text-align:center;padding:30px 0 20px;border-bottom:1px solid #21262d;margin-bottom:24px}
+.header h1{font-size:28px;color:#ff2442;font-weight:700;letter-spacing:2px}
+.header p{color:#8b949e;font-size:14px;margin-top:8px}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi-card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px 20px;text-align:center;position:relative;overflow:hidden;transition:transform .2s,border-color .2s}
+.kpi-card:hover{transform:translateY(-3px);border-color:#ff2442}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,#ff2442,#ff6b81)}
+.kpi-value{font-size:36px;font-weight:700;color:#ff2442;line-height:1.2}
+.kpi-label{color:#8b949e;font-size:13px;margin-top:8px}
+.kpi-sub{color:#58a6ff;font-size:12px;margin-top:4px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.chart-grid.full{grid-template-columns:1fr}
+.chart-box{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px}
+.chart-title{font-size:16px;font-weight:600;color:#e6edf3;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.chart-title::before{content:'';width:4px;height:16px;background:#ff2442;border-radius:2px}
+.chart-container{width:100%;height:360px}
+.chart-container.tall{height:420px}
+.tables-section{margin-top:24px}
+.tables-section .chart-title{font-size:18px;margin-bottom:16px}
+.scene-table{background:#161b22;border:1px solid #30363d;border-radius:10px;margin-bottom:12px;overflow:hidden}
+.scene-table-header{padding:14px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .2s;user-select:none}
+.scene-table-header:hover{background:#1c2128}
+.scene-table-header .scene-name{font-size:15px;font-weight:600;color:#e6edf3}
+.scene-table-header .scene-meta{font-size:12px;color:#8b949e}
+.scene-table-header .toggle{color:#ff2442;font-size:18px;transition:transform .2s}
+.scene-table.expanded .toggle{transform:rotate(180deg)}
+.scene-table-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.scene-table.expanded .scene-table-body{max-height:3000px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#1c2128;color:#8b949e;padding:10px 12px;text-align:left;font-weight:500;white-space:nowrap;position:sticky;top:0}
+td{padding:10px 12px;border-bottom:1px solid #21262d;color:#c9d1d9}
+tr.xiaren td{border-left:3px solid #ff2442}
+tr.yangxiaotui td{border-left:3px solid #6e7681}
+tr:hover td{background:#1c2128}
+td a{color:#58a6ff;text-decoration:none;cursor:pointer}
+td a:hover{text-decoration:underline}
+.gmv-cell{color:#ff2442;font-weight:600}
+.gpm-cell{color:#f0c36d;font-weight:600}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.tag-xiaren{background:rgba(255,36,66,.15);color:#ff6b81}
+.tag-yangxiaotui{background:rgba(139,148,158,.15);color:#8b949e}
+.tag-video{background:rgba(88,166,255,.15);color:#58a6ff}
+.tag-image{background:rgba(63,185,80,.15);color:#3fb950}
+.tag-potential{background:rgba(240,195,109,.15);color:#f0c36d}
+.insight-box{background:linear-gradient(135deg,rgba(255,36,66,.08),rgba(255,107,129,.05));border:1px solid rgba(255,36,66,.2);border-radius:12px;padding:20px;margin-bottom:24px}
+.insight-box h3{color:#ff2442;font-size:15px;margin-bottom:10px}
+.insight-box ul{list-style:none;padding:0}
+.insight-box li{color:#c9d1d9;font-size:13px;line-height:1.8;padding-left:16px;position:relative}
+.insight-box li::before{content:'▸';color:#ff2442;position:absolute;left:0}
+.footer{text-align:center;color:#484f58;font-size:12px;padding:20px 0;border-top:1px solid #21262d;margin-top:24px}
+@media(max-width:768px){
+.kpi-row{grid-template-columns:repeat(2,1fr)}
+.chart-grid{grid-template-columns:1fr}
+.kpi-value{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>🦐 琪琪生鲜 · 全域投放方案仪表盘</h1>
+<p>小红书店铺投放素材分析 | 338条笔记 · 6大人群场景 · 72条精选投放素材</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-row">
+<div class="kpi-card">
+<div class="kpi-value">338</div>
+<div class="kpi-label">总笔记数</div>
+<div class="kpi-sub">虾仁190 · 羊小腿148</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-value">83</div>
+<div class="kpi-label">有成交笔记数</div>
+<div class="kpi-sub">转化率 24.6%</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-value">¥36,503</div>
+<div class="kpi-label">总GMV（元）</div>
+<div class="kpi-sub">全部来自虾仁</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-value">72</div>
+<div class="kpi-label">精选投放素材</div>
+<div class="kpi-sub">6场景 · 覆盖双品类</div>
+</div>
+</div>
+
+<!-- Insight Box -->
+<div class="insight-box">
+<h3>📊 核心洞察</h3>
+<ul>
+<li><b>虾仁是绝对GMV主力</b>：83条虾仁笔记贡献了¥36,503全部GMV，羊小腿148条笔记GMV为¥0，亟需突破转化瓶颈</li>
+<li><b>性价比人群GMV最高</b>：¥14,873（占比40.7%），减脂健身人群次之¥12,664（占比34.7%），两大场景合计贡献75%以上GMV</li>
+<li><b>上班族带饭人群GPM最高</b>：平均GPM达¥1,237，独居一人食人群次之¥1,115，是投放效率最高的场景</li>
+<li><b>羊小腿素材互动极低</b>：家庭聚餐、品质复购场景的羊小腿素材阅读数和互动量接近于0，需重新设计内容策略</li>
+<li><b>Top1素材GPM高达¥5,064</b>：「靠虾仁布局今年夏天的小裙子计划」单篇GMV¥476，阅读仅94，转化效率惊人</li>
+</ul>
+</div>
+
+<!-- Row 1: Pie + GMV Bar -->
+<div class="chart-grid">
+<div class="chart-box">
+<div class="chart-title">各人群场景笔记数分布</div>
+<div class="chart-container" id="chart-pie"></div>
+</div>
+<div class="chart-box">
+<div class="chart-title">各场景GMV对比（按产品拆分）</div>
+<div class="chart-container" id="chart-gmv"></div>
+</div>
+</div>
+
+<!-- Row 2: GPM Bar + Radar -->
+<div class="chart-grid">
+<div class="chart-box">
+<div class="chart-title">各场景平均GPM对比</div>
+<div class="chart-container" id="chart-gpm"></div>
+</div>
+<div class="chart-box">
+<div class="chart-title">虾仁 vs 羊小腿 多维对比</div>
+<div class="chart-container" id="chart-radar"></div>
+</div>
+</div>
+
+<!-- Row 3: Material Count + Top10 GPM -->
+<div class="chart-grid">
+<div class="chart-box">
+<div class="chart-title">各场景投放素材数量分布</div>
+<div class="chart-container" id="chart-material"></div>
+</div>
+<div class="chart-box">
+<div class="chart-title">虾仁全场景 GPM Top10 排行</div>
+<div class="chart-container tall" id="chart-top10"></div>
+</div>
+</div>
+
+<!-- Detail Tables -->
+<div class="chart-box tables-section">
+<div class="chart-title">各场景投放素材明细（点击展开/收起）</div>
+<div id="tables-container"></div>
+</div>
+
+<div class="footer">
+<p>琪琪生鲜投放方案仪表盘 | 数据来源：小红书店铺后台 | 生成时间：2026-07-04</p>
+</div>
+
+<script>
+// ===================== DATA =====================
+const sceneSummary = [
+  {name:'减脂健身人群',notes:96,xrNotes:91,ytNotes:5,xrGmvNotes:10,gmv:12664,xrGmv:12664,ytGmv:0,reads:33424,gpm:990.69,interactions:1022,likes:486,collects:183,comments:154,shares:199,materials:15},
+  {name:'上班族带饭人群',notes:15,xrNotes:15,ytNotes:0,xrGmvNotes:6,gmv:1395,xrGmv:1395,ytGmv:0,reads:2768,gpm:1237.32,interactions:72,likes:36,collects:7,comments:10,shares:19,materials:6},
+  {name:'独居一人食人群',notes:29,xrNotes:29,ytNotes:0,xrGmvNotes:10,gmv:4005,xrGmv:4005,ytGmv:0,reads:4810,gpm:1114.93,interactions:200,likes:91,collects:30,comments:21,shares:58,materials:10},
+  {name:'性价比购买力人群',notes:76,xrNotes:29,ytNotes:47,xrGmvNotes:10,gmv:14873,xrGmv:14873,ytGmv:0,reads:45755,gpm:924.97,interactions:1045,likes:488,collects:200,comments:202,shares:155,materials:20},
+  {name:'家庭聚餐人群',notes:25,xrNotes:2,ytNotes:23,xrGmvNotes:1,gmv:127,xrGmv:127,ytGmv:0,reads:1105,gpm:122.23,interactions:2,likes:2,collects:0,comments:0,shares:0,materials:11},
+  {name:'品质复购人群',notes:30,xrNotes:0,ytNotes:30,xrGmvNotes:0,gmv:0,xrGmv:0,ytGmv:0,reads:34,gpm:0,interactions:0,likes:0,collects:0,comments:0,shares:0,materials:10}
+];
+
+// Top10 GPM across all scenes (虾仁 only)
+const top10GPM = [
+  {title:'靠虾仁布局一下今年夏天的小裙子计划！！！',gpm:5063.83,gmv:476,scene:'减脂健身',reads:94},
+  {title:'下班10分钟，独居人一人食直接开饭！！！',gpm:3980.39,gmv:203,scene:'上班族',reads:51},
+  {title:'真听劝，推出不到100卡一人食小包装',gpm:3923.08,gmv:255,scene:'减脂健身',reads:65},
+  {title:'以为小小的69块钱没多少，结果够我吃一周了',gpm:3206.35,gmv:202,scene:'性价比',reads:63},
+  {title:'以为69块买不了多少，结果足足够我吃一周',gpm:3122.64,gmv:331,scene:'性价比',reads:106},
+  {title:'按照粉丝的要求，推出一周69块一人食小包装',gpm:2539.47,gmv:193,scene:'独居一人食',reads:76},
+  {title:'独居女生请锁死！和老爸磨了三个月小包装…',gpm:2500.00,gmv:340,scene:'独居一人食',reads:136},
+  {title:'减脂人的冰箱，区区100块搞定半个月轻食餐！',gpm:2215.91,gmv:195,scene:'减脂健身',reads:88},
+  {title:'我爸说：真的低估69块的购买力了！！',gpm:1721.52,gmv:136,scene:'性价比',reads:79},
+  {title:'听粉丝的话，推出了一人食独立小包装🤩',gpm:1695.97,gmv:463,scene:'独居一人食',reads:273}
+];
+
+// Detail data for each scene
+const detailData = {
+  '减脂健身人群': [
+    {rank:1,basis:'GPM排序',title:'靠虾仁布局一下今年夏天的小裙子计划！！！',link:'https://www.xiaohongshu.com/explore/6a1d799b0000000035020bd3',type:'图文',product:'虾仁',gmv:476,gpm:5063.83,reads:94,interactions:35},
+    {rank:2,basis:'GPM排序',title:'真听劝，推出不到100卡一人食小包装',link:'https://www.xiaohongshu.com/explore/6a4526c3000000000f031990',type:'图文',product:'虾仁',gmv:255,gpm:3923.08,reads:65,interactions:2},
+    {rank:3,basis:'GPM排序',title:'减脂人的冰箱，区区100块搞定半个月轻食餐！',link:'https://www.xiaohongshu.com/explore/6a48f94c000000000f02b9d6',type:'图文',product:'虾仁',gmv:195,gpm:2215.91,reads:88,interactions:2},
+    {rank:4,basis:'GPM排序',title:'独居人减脂期的秤，输给一包虾仁……',link:'https://www.xiaohongshu.com/explore/6a30bdbf000000000f006a10',type:'图文',product:'虾仁',gmv:128,gpm:1641.03,reads:78,interactions:0},
+    {rank:5,basis:'GPM排序',title:'管理期必囤！多少个晚上靠虾仁……',link:'https://www.xiaohongshu.com/explore/6a29595e00000000360016c9',type:'图文',product:'虾仁',gmv:68,gpm:1545.45,reads:44,interactions:2},
+    {rank:6,basis:'GPM排序',title:'夏天来了，我决定花69吃一周轻食餐！',link:'https://www.xiaohongshu.com/explore/6a2a41bc00000000350329b3',type:'图文',product:'虾仁',gmv:69,gpm:1468.09,reads:47,interactions:1},
+    {rank:7,basis:'GPM排序',title:'区区69元，承包了我一星期的减脂餐✅',link:'https://www.xiaohongshu.com/explore/6a3d164c000000000f028110',type:'图文',product:'虾仁',gmv:66,gpm:1294.12,reads:51,interactions:1},
+    {rank:8,basis:'GPM排序',title:'沉浸式懒人减脂备菜，69块吃一周',link:'https://www.xiaohongshu.com/explore/6a3e325b000000001003ca0e',type:'图文',product:'虾仁',gmv:68,gpm:1283.02,reads:53,interactions:5},
+    {rank:9,basis:'GPM排序',title:'减脂期你认真听，上班这样带饭！！！',link:'https://www.xiaohongshu.com/explore/6a37f4200000000011015466',type:'图文',product:'虾仁',gmv:132,gpm:1281.55,reads:103,interactions:3},
+    {rank:10,basis:'GPM排序',title:'夏日减脂真不贵，69承包我一周减脂餐！',link:'https://www.xiaohongshu.com/explore/6a36680d000000001102ea2a',type:'图文',product:'虾仁',gmv:127,gpm:1221.15,reads:104,interactions:0},
+    {rank:11,basis:'互动量排序',title:'被我找到了！身材管理期也能狂炫的羊小腿',link:'https://www.xiaohongshu.com/explore/698e9333000000001b0147fb',type:'视频',product:'羊小腿',gmv:0,gpm:0,reads:5,interactions:1},
+    {rank:12,basis:'互动量排序',title:'减脂期也能吃！低脂鲜嫩羊小腿推荐',link:'https://www.xiaohongshu.com/explore/69c23634000000001d018631',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:2,interactions:0},
+    {rank:13,basis:'互动量排序',title:'控体期，会吃才是最重要的',link:'https://www.xiaohongshu.com/explore/69a7dfff0000000022020d1a',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:0,interactions:0},
+    {rank:14,basis:'互动量排序',title:'身材管理期狂炫的羊小腿，太香啦',link:'https://www.xiaohongshu.com/explore/69a25ab8000000002603d639',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:0,interactions:0},
+    {rank:15,basis:'互动量排序',title:'身材管理期，吃的干净新鲜比吃多少更重要',link:'https://www.xiaohongshu.com/explore/699ff3bd000000002303a65b',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:0,interactions:0}
+  ],
+  '上班族带饭人群': [
+    {rank:1,basis:'GPM排序',title:'下班10分钟，独居人一人食直接开饭！！！',link:'https://www.xiaohongshu.com/explore/6a4a34c9000000000f02ab94',type:'图文',product:'虾仁',gmv:203,gpm:3980.39,reads:51,interactions:3},
+    {rank:2,basis:'GPM排序',title:'我宣布！打工人上班带饭一餐一包刚刚好！！！',link:'https://www.xiaohongshu.com/explore/6a47520a0000000011011ff1',type:'图文',product:'虾仁',gmv:264,gpm:1257.14,reads:210,interactions:9},
+    {rank:3,basis:'GPM排序',title:'和老爸商量后，决定为早八人推出小包装',link:'https://www.xiaohongshu.com/explore/6a33d8740000000011015026',type:'图文',product:'虾仁',gmv:132,gpm:814.81,reads:162,interactions:6},
+    {rank:4,basis:'GPM排序',title:'和老爸商量后，决定为早八人推出小包装',link:'https://www.xiaohongshu.com/explore/6a2bf509000000003501fcd3',type:'图文',product:'虾仁',gmv:68,gpm:482.27,reads:141,interactions:2},
+    {rank:5,basis:'GPM排序',title:'和爸妈商量后，推出为早八人设计的小包装',link:'https://www.xiaohongshu.com/explore/6a39f03c000000001003ce3e',type:'图文',product:'虾仁',gmv:338,gpm:468.14,reads:722,interactions:18},
+    {rank:6,basis:'GPM排序',title:'和老爸商量后，推出早八人独爱的小包装',link:'https://www.xiaohongshu.com/explore/6a48bd900000000022019bd3',type:'图文',product:'虾仁',gmv:390,gpm:421.17,reads:926,interactions:17}
+  ],
+  '独居一人食人群': [
+    {rank:1,basis:'GPM排序',title:'按照粉丝的要求，推出一周69块一人食小包装',link:'https://www.xiaohongshu.com/explore/6a4331ea000000000f02a0a3',type:'图文',product:'虾仁',gmv:193,gpm:2539.47,reads:76,interactions:3},
+    {rank:2,basis:'GPM排序',title:'独居女生请锁死！和老爸磨了三个月小包装…',link:'https://www.xiaohongshu.com/explore/6a226c450000000022024a1b',type:'图文',product:'虾仁',gmv:340,gpm:2500.00,reads:136,interactions:8},
+    {rank:3,basis:'GPM排序',title:'听粉丝的话，推出了一人食独立小包装🤩',link:'https://www.xiaohongshu.com/explore/6a3a2d4b000000001101ce1e',type:'图文',product:'虾仁',gmv:463,gpm:1695.97,reads:273,interactions:9},
+    {rank:4,basis:'GPM排序',title:'和老爸商量后，推出专为独居人做独立小包装',link:'https://www.xiaohongshu.com/explore/6a3928e6000000000f033d19',type:'图文',product:'虾仁',gmv:125,gpm:1602.56,reads:78,interactions:0},
+    {rank:5,basis:'GPM排序',title:'谁说一个人做饭麻烦？5分钟搞定👩‍🍳',link:'https://www.xiaohongshu.com/explore/6a22a7e20000000022021297',type:'图文',product:'虾仁',gmv:68,gpm:1446.81,reads:47,interactions:2},
+    {rank:6,basis:'GPM排序',title:'谁发明的一餐一包啊，太懂独居党了…',link:'https://www.xiaohongshu.com/explore/6a2e5ada000000003501d4b9',type:'图文',product:'虾仁',gmv:338,gpm:1185.96,reads:285,interactions:15},
+    {rank:7,basis:'GPM排序',title:'一次一袋，真的太适合独居一人食了！！！',link:'https://www.xiaohongshu.com/explore/6a49c0af0000000011013a5c',type:'图文',product:'虾仁',gmv:193,gpm:965.00,reads:200,interactions:6},
+    {rank:8,basis:'GPM排序',title:'按照粉丝的要求，推出一周69块一人食小包装',link:'https://www.xiaohongshu.com/explore/6a28c8c50000000036001a13',type:'图文',product:'虾仁',gmv:1740,gpm:810.43,reads:2147,interactions:84},
+    {rank:9,basis:'GPM排序',title:'一人食懒人饭被一餐一包的虾仁救了……',link:'https://www.xiaohongshu.com/explore/6a48e76f0000000011017398',type:'图文',product:'虾仁',gmv:68,gpm:660.19,reads:103,interactions:4},
+    {rank:10,basis:'GPM排序',title:'一餐一包，独居打工一人食真的会懂！！',link:'https://www.xiaohongshu.com/explore/6a491ec1000000001101ab7c',type:'图文',product:'虾仁',gmv:68,gpm:653.85,reads:104,interactions:5}
+  ],
+  '性价比购买力人群': [
+    {rank:1,basis:'GPM排序',title:'以为小小的69块钱没多少，结果够我吃一周了',link:'https://www.xiaohongshu.com/explore/6a45f25e000000000f0300b1',type:'图文',product:'虾仁',gmv:202,gpm:3206.35,reads:63,interactions:1},
+    {rank:2,basis:'GPM排序',title:'以为69块买不了多少，结果足足够我吃一周',link:'https://www.xiaohongshu.com/explore/6a214a0a000000002201b264',type:'图文',product:'虾仁',gmv:331,gpm:3122.64,reads:106,interactions:7},
+    {rank:3,basis:'GPM排序',title:'我爸说：真的低估69块的购买力了！！',link:'https://www.xiaohongshu.com/explore/6a411b7b00000000110179bb',type:'图文',product:'虾仁',gmv:136,gpm:1721.52,reads:79,interactions:2},
+    {rank:4,basis:'GPM排序',title:'吃了一个月虾仁🍤真的才花了69',link:'https://www.xiaohongshu.com/explore/6a30fb4f000000000f02a1a7',type:'图文',product:'虾仁',gmv:136,gpm:1283.02,reads:106,interactions:1},
+    {rank:5,basis:'GPM排序',title:'以为69块没多少，结果够我吃一周的了',link:'https://www.xiaohongshu.com/explore/6a23d0e40000000035038adc',type:'图文',product:'虾仁',gmv:68,gpm:1062.50,reads:64,interactions:4},
+    {rank:6,basis:'GPM排序',title:'现在年轻人，严重低估了69的购买力！',link:'https://www.xiaohongshu.com/explore/6a312cb4000000001102fa7a',type:'图文',product:'虾仁',gmv:136,gpm:1007.41,reads:135,interactions:4},
+    {rank:7,basis:'GPM排序',title:'谁敢信这是100💰的购买力！！！！',link:'https://www.xiaohongshu.com/explore/6a2e21870000000022021784',type:'图文',product:'虾仁',gmv:272,gpm:781.61,reads:348,interactions:4},
+    {rank:8,basis:'GPM排序',title:'以为69块没多少，结果够我吃一周了…',link:'https://www.xiaohongshu.com/explore/6a2a954a00000000350206bf',type:'图文',product:'虾仁',gmv:68,gpm:764.04,reads:89,interactions:2},
+    {rank:9,basis:'GPM排序',title:'真听劝，严重低估了70块的购买力了！！！',link:'https://www.xiaohongshu.com/explore/6a239e4f00000000360010e7',type:'图文',product:'虾仁',gmv:68,gpm:647.62,reads:105,interactions:7},
+    {rank:10,basis:'GPM排序',title:'我爸说了，60块吃一周让你冰箱多点安全感',link:'https://www.xiaohongshu.com/explore/6a37f422000000000f0171f5',type:'图文',product:'虾仁',gmv:3688,gpm:635.97,reads:5799,interactions:146},
+    {rank:11,basis:'互动量排序',title:'88元搞定一周羊肉需求！挖到了宝藏羊小腿',link:'https://www.xiaohongshu.com/explore/69c39d89000000002200c416',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:2,interactions:0},
+    {rank:12,basis:'互动量排序',title:'88元两斤顺丰包邮！这羊肉性价比封神',link:'https://www.xiaohongshu.com/explore/69ba4d6d0000000023023ef6',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:13,basis:'互动量排序',title:'88元两斤！这款内蒙羊小腿我能回购一百次',link:'https://www.xiaohongshu.com/explore/69ba1487000000001d019a17',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:14,basis:'互动量排序',title:'88两斤的内蒙羊小腿，我爸说这价卖疯了',link:'https://www.xiaohongshu.com/explore/69b8f97d000000002200e00a',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:15,basis:'互动量排序',title:'现在的年轻人都低估了不到90的购买力',link:'https://www.xiaohongshu.com/explore/69b7be820000000021006cf5',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:16,basis:'互动量排序',title:'我妈：88元两斤的内蒙羊小腿，吊打菜市场',link:'https://www.xiaohongshu.com/explore/69b4ccd20000000023020e02',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:17,basis:'互动量排序',title:'这么多的福利可不是一直都有！千万别犹豫',link:'https://www.xiaohongshu.com/explore/69abb243000000002602ecfd',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:18,basis:'互动量排序',title:'现在我们对88块钱的购买力真的毫无概念',link:'https://www.xiaohongshu.com/explore/69ab95f50000000022023c75',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:19,basis:'互动量排序',title:'被88的购买力惊呆了～整整两斤',link:'https://www.xiaohongshu.com/explore/69aaa5740000000023039b84',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:20,basis:'互动量排序',title:'肉食党看过来！2斤只要88r的羊小腿放心冲！',link:'https://www.xiaohongshu.com/explore/698e8c64000000001600bb2d',type:'视频',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0}
+  ],
+  '家庭聚餐人群': [
+    {rank:1,basis:'GPM排序',title:'年轻人谁还敢去菜市场！！',link:'https://www.xiaohongshu.com/explore/6a2d3a2c00000000350276d4',type:'视频',product:'虾仁',gmv:127,gpm:122.23,reads:1039,interactions:2},
+    {rank:2,basis:'互动量排序',title:'艾特朋友来请你吃羊小腿',link:'https://www.xiaohongshu.com/explore/69c3aeb700000000230253f9',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:3,interactions:0},
+    {rank:3,basis:'互动量排序',title:'全家都爱吃的羊小腿，暖心暖胃',link:'https://www.xiaohongshu.com/explore/69c0e474000000002301340d',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:2,interactions:0},
+    {rank:4,basis:'互动量排序',title:'天冷就爱这一口！清炖羊小腿太治愈',link:'https://www.xiaohongshu.com/explore/69c36e54000000001d0197db',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:5,basis:'互动量排序',title:'不要犹豫，冬天吃羊小腿暖到没对手！',link:'https://www.xiaohongshu.com/explore/698bdad4000000001a034d36',type:'视频',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:6,basis:'互动量排序',title:'秋冬多吃羊小腿！太暖啦！',link:'https://www.xiaohongshu.com/explore/698013d1000000002103fc07',type:'视频',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:7,basis:'互动量排序',title:'我妈：你就30来块一斤卖，吊打菜市场',link:'https://www.xiaohongshu.com/explore/6971ef1c000000000a02ef34',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:8,basis:'互动量排序',title:'我妈：你就卖30来块一斤，保准吊打菜市场',link:'https://www.xiaohongshu.com/explore/696eef01000000001a034e5e',type:'视频',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:9,basis:'互动量排序',title:'我妈说：你就30来块一斤卖，保准吊打菜市场',link:'https://www.xiaohongshu.com/explore/696a3bfc000000000a030a92',type:'视频',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:10,basis:'互动量排序',title:'老人小孩超爱吃！软糯羊小腿推荐',link:'https://www.xiaohongshu.com/explore/69bd175000000000230110ae',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:0,interactions:0},
+    {rank:11,basis:'互动量排序',title:'天冷暖胃必备！这羊小腿也太治愈了',link:'https://www.xiaohongshu.com/explore/69bbc650000000001b003c56',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:0,interactions:0}
+  ],
+  '品质复购人群': [
+    {rank:1,basis:'互动量排序',title:'吃过最好吃的羊小腿，吃得眼前一亮又一亮',link:'https://www.xiaohongshu.com/explore/698ee097000000000d00a5d9',type:'视频',product:'羊小腿',gmv:0,gpm:0,reads:21,interactions:0},
+    {rank:2,basis:'互动量排序',title:'不愧是内蒙羊... 没有膻味😭真的巨好吃！！',link:'https://www.xiaohongshu.com/explore/69746ac1000000000a03efc7',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:5,interactions:0},
+    {rank:3,basis:'互动量排序',title:'被问爆链接的羊小腿，果然名不虚传',link:'https://www.xiaohongshu.com/explore/69c0fb8d000000002200e60c',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:4,basis:'互动量排序',title:'巨入味！这款羊小腿好吃到舔盘',link:'https://www.xiaohongshu.com/explore/69be2883000000002200d820',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:5,basis:'互动量排序',title:'香到嗦手指！这款羊小腿我按箱囤',link:'https://www.xiaohongshu.com/explore/69bb9d0400000000210042e2',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:6,basis:'互动量排序',title:'内蒙羊小腿简直就是羊肉界天花板！',link:'https://www.xiaohongshu.com/explore/69b8c0f80000000021004f21',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:7,basis:'互动量排序',title:'只需要简单清炖就好吃的内蒙羊小腿',link:'https://www.xiaohongshu.com/explore/69b1112d000000002203a607',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:8,basis:'互动量排序',title:'吃过内蒙羊小腿才懂羊肉有多好吃',link:'https://www.xiaohongshu.com/explore/69a90e720000000022039ef0',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:9,basis:'互动量排序',title:'世界上最好吃的内蒙羊小腿出现了！',link:'https://www.xiaohongshu.com/explore/69a7fcb3000000002602d013',type:'图文',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0},
+    {rank:10,basis:'互动量排序',title:'不要犹豫，清炖内蒙羊小腿好吃到没对手！',link:'https://www.xiaohongshu.com/explore/699d052f000000001503a875',type:'视频',product:'羊小腿',gmv:0,gpm:0,reads:1,interactions:0}
+  ],
+  '虾仁潜力素材（无GMV高互动）': [
+    {rank:1,basis:'互动量排序(潜力)',title:'真听劝，推出不到100卡一人食小包装！！！',link:'https://www.xiaohongshu.com/explore/6a2521780000000022025b82',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:358,interactions:9},
+    {rank:2,basis:'互动量排序(潜力)',title:'和爸妈讨论后，让我出一人食无添加虾仁',link:'https://www.xiaohongshu.com/explore/6a47c645000000000f0320df',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:25,interactions:8},
+    {rank:3,basis:'互动量排序(潜力)',title:'直观展示一下100元的购买力！',link:'https://www.xiaohongshu.com/explore/6a3d02d7000000000f01f202',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:113,interactions:7},
+    {rank:4,basis:'互动量排序(潜力)',title:'和爸妈商量后，推出为早八人设计的小包装',link:'https://www.xiaohongshu.com/explore/6a2559ab00000000350207f1',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:313,interactions:6},
+    {rank:5,basis:'互动量排序(潜力)',title:'不敢相信😱100块承包了我十顿轻食餐',link:'https://www.xiaohongshu.com/explore/6a390cec0000000011005cf6',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:86,interactions:5},
+    {rank:6,basis:'互动量排序(潜力)',title:'手剥虾仁69管一周？一人食减脂餐！',link:'https://www.xiaohongshu.com/explore/6a24f1570000000022027c66',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:65,interactions:5},
+    {rank:7,basis:'互动量排序(潜力)',title:'独居人，一个人食吃的独立小包装真的很省事',link:'https://www.xiaohongshu.com/explore/6a47bd98000000000f0057f2',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:90,interactions:5},
+    {rank:8,basis:'互动量排序(潜力)',title:'控体期，上班族午餐省钱秘诀😭',link:'https://www.xiaohongshu.com/explore/6a3a6952000000001101104c',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:95,interactions:5},
+    {rank:9,basis:'互动量排序(潜力)',title:'发现打工人减脂根本花不了几个钱…',link:'https://www.xiaohongshu.com/explore/6a2234b1000000003502d5f3',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:140,interactions:5},
+    {rank:10,basis:'互动量排序(潜力)',title:'多亏了这虾仁，夏天前的控体KPI提前完成',link:'https://www.xiaohongshu.com/explore/6a33d3f000000000220192d3',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:53,interactions:5},
+    {rank:11,basis:'互动量排序(潜力)',title:'减脂期，打工人带饭靠独立小包装虾仁续命……',link:'https://www.xiaohongshu.com/explore/6a4606ec000000001101f060',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:89,interactions:5},
+    {rank:12,basis:'互动量排序(潜力)',title:'听粉丝的话，推出了一人食独立小包装🤩',link:'https://www.xiaohongshu.com/explore/6a1ec118000000003502cc8d',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:42,interactions:5},
+    {rank:13,basis:'互动量排序(潜力)',title:'和老爸决定，上架了一人食方便携带的小包装',link:'https://www.xiaohongshu.com/explore/6a44cdc800000000110105e2',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:76,interactions:4},
+    {rank:14,basis:'互动量排序(潜力)',title:'我妈：终于不天天吃外卖了🤣',link:'https://www.xiaohongshu.com/explore/6a4279c8000000000f006662',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:106,interactions:4},
+    {rank:15,basis:'互动量排序(潜力)',title:'以为69块买不了多少，结果足足够我吃一周',link:'https://www.xiaohongshu.com/explore/6a339b750000000011013fc1',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:90,interactions:4},
+    {rank:16,basis:'互动量排序(潜力)',title:'早八打工人建议：减脂虾仁不要随便买',link:'https://www.xiaohongshu.com/explore/6a3e7990000000002201a94c',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:53,interactions:4},
+    {rank:17,basis:'互动量排序(潜力)',title:'5年健身人！吃的干净真的会so！！',link:'https://www.xiaohongshu.com/explore/6a37b3260000000011018f97',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:110,interactions:4},
+    {rank:18,basis:'互动量排序(潜力)',title:'100块吃不了一顿烧烤，但承包我一周减脂餐！',link:'https://www.xiaohongshu.com/explore/6a471987000000001101fb1e',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:123,interactions:4},
+    {rank:19,basis:'互动量排序(潜力)',title:'谁懂啊，减脂期真的离不开小包装虾仁..',link:'https://www.xiaohongshu.com/explore/6a3e6b04000000001101e392',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:118,interactions:4},
+    {rank:20,basis:'互动量排序(潜力)',title:'我也不想买啊，可它69够我吃一周的了',link:'https://www.xiaohongshu.com/explore/6a351cc2000000001101bea8',type:'图文',product:'虾仁',gmv:0,gpm:0,reads:27,interactions:4}
+  ]
+};
+
+// ===================== CHART CONFIG =====================
+const COLOR_XR = '#ff2442';
+const COLOR_YT = '#6e7681';
+const COLOR_ACCENT = '#ff6b81';
+const COLOR_BLUE = '#58a6ff';
+const COLOR_GOLD = '#f0c36d';
+const COLOR_GREEN = '#3fb950';
+const sceneColors = ['#ff2442','#ff6b81','#f0c36d','#3fb950','#58a6ff','#9b6eff'];
+
+const baseTextStyle = {color:'#c9d1d9',fontFamily:'-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif'};
+const baseGrid = {left:'3%',right:'5%',bottom:'8%',top:'15%',containLabel:true};
+
+// ---- Chart 1: Scene Pie ----
+const pieChart = echarts.init(document.getElementById('chart-pie'));
+pieChart.setOption({
+  tooltip:{trigger:'item',backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3'},
+    formatter:function(p){
+      const s=sceneSummary.find(x=>x.name===p.name);
+      return '<b>'+p.name+'</b><br/>笔记数: '+p.value+' ('+p.percent+'%)<br/>GMV: ¥'+s.gmv.toLocaleString()+'<br/>平均GPM: ¥'+s.gpm.toFixed(2);
+    }
+  },
+  legend:{orient:'vertical',right:'5%',top:'center',textStyle:{color:'#8b949e',fontSize:12},itemWidth:10,itemHeight:10},
+  series:[{
+    type:'pie',radius:['40%','70%'],center:['38%','50%'],
+    itemStyle:{borderColor:'#0e1117',borderWidth:2},
+    label:{show:false},
+    emphasis:{label:{show:true,fontSize:14,fontWeight:'bold',color:'#e6edf3'},
+      itemStyle:{shadowBlur:10,shadowColor:'rgba(255,36,66,0.3)'}
+    },
+    data:sceneSummary.map((s,i)=>({name:s.name,value:s.notes,itemStyle:{color:sceneColors[i]}}))
+  }]
+});
+
+// ---- Chart 2: GMV Bar (stacked by product) ----
+const gmvChart = echarts.init(document.getElementById('chart-gmv'));
+const sceneNames = sceneSummary.map(s=>s.name.replace('人群',''));
+gmvChart.setOption({
+  tooltip:{trigger:'axis',backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3'},
+    formatter:function(params){
+      let html='<b>'+params[0].name+'人群</b><br/>';
+      params.forEach(p=>{
+        html+=p.marker+p.seriesName+': ¥'+(p.value||0).toLocaleString()+'<br/>';
+      });
+      const total=params.reduce((s,p)=>s+(p.value||0),0);
+      html+='<b>合计: ¥'+total.toLocaleString()+'</b>';
+      return html;
+    }
+  },
+  legend:{data:['虾仁GMV','羊小腿GMV'],textStyle:{color:'#8b949e'},top:'3%'},
+  grid:baseGrid,
+  xAxis:{type:'category',data:sceneNames,axisLabel:{color:'#8b949e',fontSize:11,interval:0,rotate:15},axisLine:{lineStyle:{color:'#30363d'}}},
+  yAxis:{type:'value',name:'GMV(元)',nameTextStyle:{color:'#8b949e'},axisLabel:{color:'#8b949e',formatter:function(v){return v>=1000?(v/1000)+'k':v}},splitLine:{lineStyle:{color:'#21262d'}}},
+  series:[
+    {name:'虾仁GMV',type:'bar',stack:'gmv',data:sceneSummary.map(s=>s.xrGmv),itemStyle:{color:COLOR_XR},barWidth:'40%'},
+    {name:'羊小腿GMV',type:'bar',stack:'gmv',data:sceneSummary.map(s=>s.ytGmv),itemStyle:{color:COLOR_YT},barWidth:'40%'}
+  ]
+});
+
+// ---- Chart 3: GPM Bar ----
+const gpmChart = echarts.init(document.getElementById('chart-gpm'));
+const maxGpmScene = sceneSummary.reduce((max,s)=>s.gpm>max.gpm?s:max,sceneSummary[0]);
+gpmChart.setOption({
+  tooltip:{trigger:'axis',backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3'},
+    formatter:function(params){
+      const s=sceneSummary[params[0].dataIndex];
+      return '<b>'+s.name+'</b><br/>平均GPM: ¥'+s.gpm.toFixed(2)+'<br/>总GMV: ¥'+s.gmv.toLocaleString()+'<br/>有成交笔记: '+s.xrGmvNotes+'条';
+    }
+  },
+  grid:baseGrid,
+  xAxis:{type:'category',data:sceneNames,axisLabel:{color:'#8b949e',fontSize:11,interval:0,rotate:15},axisLine:{lineStyle:{color:'#30363d'}}},
+  yAxis:{type:'value',name:'平均GPM(元)',nameTextStyle:{color:'#8b949e'},axisLabel:{color:'#8b949e'},splitLine:{lineStyle:{color:'#21262d'}}},
+  series:[{
+    type:'bar',data:sceneSummary.map((s,i)=>({
+      value:s.gpm,
+      itemStyle:{color:s.name===maxGpmScene.name?COLOR_GOLD:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:COLOR_XR},{offset:1,color:'#8b1a2e'}])}
+    })),
+    barWidth:'45%',
+    label:{show:true,position:'top',color:'#c9d1d9',fontSize:11,formatter:function(p){return '¥'+p.value.toFixed(0)}},
+    markPoint:{data:[{name:'最高GPM',coord:[sceneNames.indexOf(maxGpmScene.name.replace('人群','')),maxGpmScene.gpm],
+      symbolSize:0,label:{show:true,formatter:'★ 最高GPM\n¥'+maxGpmScene.gpm.toFixed(0),color:COLOR_GOLD,fontSize:11,position:'top',distance:8}}]}
+  }]
+});
+
+// ---- Chart 4: Radar (虾仁 vs 羊小腿) ----
+const radarChart = echarts.init(document.getElementById('chart-radar'));
+// Normalize values to 0-100 for comparison
+const maxValues = {notes:190,gmv:36503,reads:93000,interactions:2500,gmvNotes:83};
+radarChart.setOption({
+  tooltip:{backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3'}},
+  legend:{data:['手剥海虾仁','内蒙古羊小腿'],textStyle:{color:'#8b949e'},top:'3%',left:'center'},
+  radar:{
+    indicator:[
+      {name:'笔记数',max:100},
+      {name:'GMV',max:100},
+      {name:'阅读数',max:100},
+      {name:'互动量',max:100},
+      {name:'有成交笔记',max:100}
+    ],
+    center:['50%','55%'],radius:'65%',
+    axisName:{color:'#c9d1d9',fontSize:12},
+    splitLine:{lineStyle:{color:'#30363d'}},
+    splitArea:{areaStyle:{color:['rgba(255,36,66,0.02)','rgba(255,36,66,0.05)']}},
+    axisLine:{lineStyle:{color:'#30363d'}}
+  },
+  series:[{
+    type:'radar',
+    emphasis:{lineStyle:{width:3}},
+    data:[
+      {value:[190,36503,93000,2500,83].map((v,i)=>Object.values(maxValues)[i]===0?0:Math.round(v/Object.values(maxValues)[i]*100)),
+       name:'手剥海虾仁',
+       itemStyle:{color:COLOR_XR},
+       lineStyle:{color:COLOR_XR,width:2},
+       areaStyle:{color:'rgba(255,36,66,0.2)'}
+      },
+      {value:[148,0,1700,100,0].map((v,i)=>Object.values(maxValues)[i]===0?0:Math.round(v/Object.values(maxValues)[i]*100)),
+       name:'内蒙古羊小腿',
+       itemStyle:{color:COLOR_YT},
+       lineStyle:{color:COLOR_YT,width:2},
+       areaStyle:{color:'rgba(110,118,129,0.15)'}
+      }
+    ]
+  }]
+});
+
+// ---- Chart 5: Material Count (horizontal bar) ----
+const materialChart = echarts.init(document.getElementById('chart-material'));
+const sortedMaterials = [...sceneSummary].sort((a,b)=>a.materials-b.materials);
+materialChart.setOption({
+  tooltip:{trigger:'axis',backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf9'},
+    formatter:function(params){
+      const s=sortedMaterials[params[0].dataIndex];
+      return '<b>'+s.name+'</b><br/>投放素材: '+s.materials+'条<br/>虾仁素材: '+s.xrGmvNotes+'条(GPM)<br/>总笔记: '+s.notes+'条';
+    }
+  },
+  grid:{left:'3%',right:'8%',bottom:'3%',top:'5%',containLabel:true},
+  xAxis:{type:'value',axisLabel:{color:'#8b949e'},splitLine:{lineStyle:{color:'#21262d'}}},
+  yAxis:{type:'category',data:sortedMaterials.map(s=>s.name.replace('人群','')),axisLabel:{color:'#c9d1d9',fontSize:12},axisLine:{lineStyle:{color:'#30363d'}}},
+  series:[{
+    type:'bar',data:sortedMaterials.map(s=>s.materials),
+    barWidth:'50%',
+    itemStyle:{color:new echarts.graphic.LinearGradient(1,0,0,0,[{offset:0,color:COLOR_XR},{offset:1,color:'#ff6b81'}]),borderRadius:[0,4,4,0]},
+    label:{show:true,position:'right',color:'#e6edf3',fontSize:12,formatter:'{c}条'}
+  }]
+});
+
+// ---- Chart 6: Top10 GPM Ranking (horizontal bar) ----
+const top10Chart = echarts.init(document.getElementById('chart-top10'));
+const top10Sorted = [...top10GPM].sort((a,b)=>a.gpm-b.gpm);
+const top10Titles = top10Sorted.map(t=>t.title.length>18?t.title.substring(0,18)+'…':t.title);
+top10Chart.setOption({
+  tooltip:{trigger:'axis',backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3'},
+    formatter:function(params){
+      const t=top10Sorted[params[0].dataIndex];
+      return '<b>'+t.title+'</b><br/>GPM: ¥'+t.gpm.toFixed(2)+'<br/>GMV: ¥'+t.gmv.toLocaleString()+'<br/>阅读数: '+t.reads+'<br/>场景: '+t.scene;
+    }
+  },
+  grid:{left:'3%',right:'12%',bottom:'3%',top:'5%',containLabel:true},
+  xAxis:{type:'value',name:'GPM(元)',nameTextStyle:{color:'#8b949e'},axisLabel:{color:'#8b949e'},splitLine:{lineStyle:{color:'#21262d'}}},
+  yAxis:{type:'category',data:top10Titles,axisLabel:{color:'#c9d1d9',fontSize:11,width:120,overflow:'truncate'},axisLine:{lineStyle:{color:'#30363d'}}},
+  series:[{
+    type:'bar',data:top10Sorted.map((t,i)=>({
+      value:t.gpm,
+      itemStyle:{color:new echarts.graphic.LinearGradient(1,0,0,0,[
+        {offset:0,color:i>=7?COLOR_GOLD:COLOR_XR},
+        {offset:1,color:i>=7?'rgba(240,195,109,0.3)':'rgba(255,36,66,0.3)'}
+      ]),borderRadius:[0,4,4,0]}
+    })),
+    barWidth:'55%',
+    label:{show:true,position:'right',color:'#e6edf3',fontSize:11,formatter:function(p){return '¥'+p.value.toFixed(0)}}
+  }]
+});
+
+// ===================== DETAIL TABLES =====================
+function truncate(str,maxLen){
+  return str.length>maxLen?str.substring(0,maxLen)+'…':str;
+}
+
+function buildTable(sceneName,items){
+  const sceneInfo = sceneSummary.find(s=>s.name===sceneName) || {notes:items.length,gmv:0,gpm:0,materials:items.length};
+  let rows = items.map(item=>{
+    const isXR = item.product==='虾仁';
+    const rowClass = isXR?'xiaren':'yangxiaotui';
+    const productTag = isXR?'<span class="tag tag-xiaren">虾仁</span>':'<span class="tag tag-yangxiaotui">羊小腿</span>';
+    const typeTag = item.type==='视频'?'<span class="tag tag-video">视频</span>':'<span class="tag tag-image">图文</span>';
+    const basisTag = item.basis.includes('潜力')?'<span class="tag tag-potential">潜力</span>':'';
+    const gmvDisplay = item.gmv>0?'<span class="gmv-cell">¥'+item.gmv+'</span>':'<span style="color:#484f58">¥0</span>';
+    const gpmDisplay = item.gpm>0?'<span class="gpm-cell">'+item.gpm.toFixed(2)+'</span>':'<span style="color:#484f58">0</span>';
+    return '<tr class="'+rowClass+'">'+
+      '<td style="text-align:center;color:#8b949e">'+item.rank+'</td>'+
+      '<td>'+productTag+'</td>'+
+      '<td><a href="'+item.link+'" target="_blank" title="'+item.title+'">'+truncate(item.title,40)+'</a></td>'+
+      '<td style="text-align:center">'+typeTag+' '+basisTag+'</td>'+
+      '<td style="text-align:right">'+gmvDisplay+'</td>'+
+      '<td style="text-align:right">'+gpmDisplay+'</td>'+
+      '<td style="text-align:right">'+item.reads+'</td>'+
+      '<td style="text-align:right">'+item.interactions+'</td>'+
+      '</tr>';
+  }).join('');
+
+  const metaText = sceneInfo.gmv!==undefined
+    ? '笔记 '+sceneInfo.notes+' · GMV ¥'+sceneInfo.gmv.toLocaleString()+' · GPM ¥'+sceneInfo.gpm.toFixed(0)+' · 素材 '+items.length+'条'
+    : '素材 '+items.length+'条';
+
+  return '<div class="scene-table">'+
+    '<div class="scene-table-header" onclick="this.parentElement.classList.toggle(\'expanded\')">'+
+      '<span class="scene-name">'+sceneName+'</span>'+
+      '<span class="scene-meta">'+metaText+' <span class="toggle">▼</span></span>'+
+    '</div>'+
+    '<div class="scene-table-body"><div class="table-wrap"><table>'+
+      '<thead><tr>'+
+        '<th style="width:50px;text-align:center">排名</th>'+
+        '<th style="width:70px">产品</th>'+
+        '<th>笔记标题</th>'+
+        '<th style="width:120px;text-align:center">类型</th>'+
+        '<th style="width:90px;text-align:right">GMV(元)</th>'+
+        '<th style="width:100px;text-align:right">GPM</th>'+
+        '<th style="width:80px;text-align:right">阅读数</th>'+
+        '<th style="width:80px;text-align:right">互动总量</th>'+
+      '</tr></thead>'+
+      '<tbody>'+rows+'</tbody>'+
+    '</table></div></div>'+
+  '</div>';
+}
+
+const tableOrder = ['减脂健身人群','上班族带饭人群','独居一人食人群','性价比购买力人群','家庭聚餐人群','品质复购人群','虾仁潜力素材（无GMV高互动）'];
+document.getElementById('tables-container').innerHTML = tableOrder.map(name=>buildTable(name,detailData[name])).join('');
+
+// Auto-expand first table
+document.querySelector('.scene-table').classList.add('expanded');
+
+// ===================== RESIZE =====================
+window.addEventListener('resize',function(){
+  [pieChart,gmvChart,gpmChart,radarChart,materialChart,top10Chart].forEach(c=>c.resize());
+});
+</script>
+
+</body>
+</html>
